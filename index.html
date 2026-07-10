@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UBA's Honey | Pure Molecular Honey</title>
+  <meta name="description" content="A minimalist, premium experience of UBA's Honey. Pure molecular honey, verified on the blockchain ledger and harvested bio-mechanically.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- WebGL 3D Container (Three.js will mount here) -->
+  <div id="webgl-container"></div>
+
+  <!-- Header Navigation -->
+  <header>
+    <a href="#" class="logo">
+      <svg class="logo-icon" viewBox="0 0 100 100" fill="none" stroke="#e0a96d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="50,15 80,32 80,68 50,85 20,68 20,32"/>
+        <circle cx="50" cy="50" r="10" fill="#e0a96d"/>
+      </svg>
+      UBA'S HONEY
+    </a>
+    
+    <ul class="nav-links">
+      <li><a href="#hero">Concept</a></li>
+      <li><a href="#tech">Refinement</a></li>
+      <li><a href="#analyzer">Purity</a></li>
+      <li><a href="#authenticator">Ledger</a></li>
+      <li><a href="#hive-map">Operations</a></li>
+      <li><a href="#store">Acquisition</a></li>
+    </ul>
+
+    <div class="header-actions">
+      <button class="cart-icon-btn" id="cart-toggle-btn" aria-label="Open Cargo Bay">
+        <svg viewBox="0 0 24 24">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <span class="cart-count" id="cart-count" style="display: none;">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="hero">
+    <div class="hero-content">
+      <span class="hero-subtitle">EST. 2088 // QUANTUM HARVEST</span>
+      <h1 class="hero-title">
+        <span>MOLECULAR PURITY</span>
+        UBA'S PURE HONEY
+      </h1>
+      <p class="hero-desc">
+        A marriage of organic biology and WebGL engineering. Our autonomous bio-drones gather premium nectar from protected sanctuaries, cold-filtering it at a molecular scale to achieve 99.98% purity. Traceable, certified, and completely natural.
+      </p>
+      
+      <div class="hero-buttons">
+        <a href="#store" class="btn-primary">
+          <span>Acquire jar</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#authenticator" class="btn-secondary">Verify Ledger</a>
+      </div>
+
+      <div class="hero-stats-panel glass-panel">
+        <div class="hero-stat">
+          <div class="hero-stat-value">99.98%</div>
+          <div class="hero-stat-label">Purity Index</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">88-X</div>
+          <div class="hero-stat-label">Harvest ID</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">Dome 3</div>
+          <div class="hero-stat-label">Bio-Origin</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column Placeholder (Three.js Honey Jar floats here) -->
+    <div class="hero-visual-placeholder"></div>
+  </section>
+
+  <!-- Refinement Technology Section -->
+  <section id="tech">
+    <div style="text-align: center;">
+      <h2>Autonomous Bio-Harvest</h2>
+      <span class="section-subtitle">A New Epoch of Apiculture</span>
+    </div>
+
+    <div class="tech-grid">
+      <!-- Bio-Drone Pollinators -->
+      <div class="tech-card glass-panel">
+        <div class="tech-icon-wrapper">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <h3>Bio-Bee Drones</h3>
+        <p>Cybernetic pollinators harvest pristine wild nectars inside high-altitude domes, ensuring zero impact on natural native environments.</p>
+        <div class="tech-visual-container">
+          <img class="tech-visual-img" src="assets/cyber_bee_drone.png" alt="Minimal Cyber-Bee Drone">
+        </div>
+      </div>
+
+      <!-- Molecular Refinement -->
+      <div class="tech-card glass-panel">
+        <div class="tech-icon-wrapper">
+          <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <circle cx="12" cy="12" r="4"/>
+          </svg>
+        </div>
+        <h3>Cold Refinement</h3>
+        <p>Quantum molecular membranes filter particulates down to the micro-level while maintaining vital pollen structure and natural enzyme health.</p>
+        <div class="tech-visual-container">
+          <img class="tech-visual-img" src="assets/honey_jar_futuristic.png" alt="Sleek Honey Refinement Jar">
+        </div>
+      </div>
+
+      <!-- Cryo-Preservation -->
+      <div class="tech-card glass-panel">
+        <div class="tech-icon-wrapper">
+          <svg viewBox="0 0 24 24">
+            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+          </svg>
+        </div>
+        <h3>Molecular Locking</h3>
+        <p>Instant cryo-stasis locks biological compounds in place immediately after extraction, halting enzyme decay until the moment of consumption.</p>
+        <div class="tech-visual-container">
+          <!-- Minimal SVG illustration for cryo lock -->
+          <svg viewBox="0 0 200 120" style="width:100%; height:100%; stroke:rgba(224, 169, 109, 0.3); fill:none; opacity:0.6;">
+            <circle cx="100" cy="60" r="30" stroke-width="1"/>
+            <line x1="100" y1="15" x2="100" y2="105" stroke-dasharray="3,3"/>
+            <line x1="55" y1="60" x2="145" y2="60" stroke-dasharray="3,3"/>
+            <circle cx="100" cy="60" r="10" stroke="#e0a96d" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Molecular Analyzer Section -->
+  <section id="analyzer">
+    <div style="text-align: center;">
+      <h2>Diagnostic Terminal</h2>
+      <span class="section-subtitle">Real-Time Molecular Audit</span>
+    </div>
+
+    <div class="analyzer-container">
+      <div class="analyzer-panel glass-panel">
+        
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">Viscosity Index</span>
+            <span class="slider-value" id="viscosity-val">2,200 cps</span>
+          </div>
+          <input type="range" class="custom-slider" id="viscosity-slider" min="500" max="4000" value="2200">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">Diastase Count</span>
+            <span class="slider-value" id="enzyme-val">32 DU</span>
+          </div>
+          <input type="range" class="custom-slider" id="enzyme-slider" min="5" max="50" value="32">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">Pollen Index</span>
+            <span class="slider-value" id="pollen-val">98%</span>
+          </div>
+          <input type="range" class="custom-slider" id="pollen-slider" min="40" max="100" value="98">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="slider-label">HMF Levels</span>
+            <span class="slider-value" id="hmf-val">3.2 mg/kg</span>
+          </div>
+          <input type="range" class="custom-slider" id="hmf-slider" min="0.5" max="40" value="3.2" step="0.1">
+        </div>
+
+      </div>
+
+      <div class="display-panel glass-panel">
+        <div class="radial-gauge-container">
+          <svg class="gauge-svg" viewBox="0 0 200 200">
+            <circle class="gauge-track" cx="100" cy="100" r="90" />
+            <circle class="gauge-fill" id="gauge-fill" cx="100" cy="100" r="90" />
+          </svg>
+          <div class="gauge-percentage" id="gauge-percentage">98.24%</div>
+        </div>
+
+        <div class="grade-banner" id="grade-banner">S-GRADE QUANTUM</div>
+        <div class="diagnostic-status" id="status-readout">SYS_OK: MOLECULAR INTEGRITY SECURED.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blockchain Authenticator Section -->
+  <section id="authenticator">
+    <div style="text-align: center;">
+      <h2>Purity Ledger</h2>
+      <span class="section-subtitle">Decentralized Batch Authenticity Check</span>
+    </div>
+
+    <div class="auth-container">
+      <div class="auth-form-card glass-panel">
+        <p>
+          Each UBA Honey jar is paired with a hash code on the hive ledger. Input your batch number to query harvesting parameters, drone locations, and molecular logs.
+        </p>
+
+        <div class="auth-input-group">
+          <label for="auth-input">Batch ID</label>
+          <input type="text" class="auth-input" id="auth-input" placeholder="e.g. UBA-88X" autocomplete="off">
+        </div>
+
+        <button class="btn-primary" id="auth-btn" style="width: 100%; justify-content: center;">
+          <span>Query Ledger</span>
+        </button>
+
+        <div style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-display);">
+          <span>TEST IDENTIFIERS:</span>
+          <code style="color: var(--accent-gold); cursor: pointer; margin-left: 6px;" onclick="document.getElementById('auth-input').value='UBA-88X'">UBA-88X</code>,
+          <code style="color: var(--accent-gold); cursor: pointer; margin-left: 6px;" onclick="document.getElementById('auth-input').value='UBA-99Y'">UBA-99Y</code>,
+          <code style="color: var(--accent-gold); cursor: pointer; margin-left: 6px;" onclick="document.getElementById('auth-input').value='NEO-BEE7'">NEO-BEE7</code>
+        </div>
+      </div>
+
+      <!-- Minimal terminal window -->
+      <div class="console-panel">
+        <div class="console-header">
+          <div class="console-dots">
+            <span class="console-dot"></span>
+            <span class="console-dot"></span>
+            <span class="console-dot"></span>
+          </div>
+          <span class="console-title">HIVE CRYPTO LEDGER CLIENT</span>
+        </div>
+        <div class="console-content" id="console-content">
+          <span class="console-welcome">> LEDGER CLIENT OK. AWAITING BATCH DATA QUERY...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hive Operations Map Section -->
+  <section id="hive-map">
+    <div style="text-align: center;">
+      <h2>Operation Coordinates</h2>
+      <span class="section-subtitle">Bio-Dome Networks</span>
+    </div>
+
+    <div class="map-layout">
+      <div class="map-container">
+        <!-- Minimal schematic vector line map -->
+        <svg class="map-svg" viewBox="0 0 800 450">
+          <path d="M100,200 Q250,80 400,160 T700,200 T180,350 Z" stroke-dasharray="8,4"/>
+          <polyline points="150,80 350,120 400,250 580,180 750,280 650,380 300,380" />
+        </svg>
+
+        <div class="hive-node node-1" data-id="1">
+          <div class="node-pulse"></div>
+          <div class="node-core"></div>
+          <div class="node-tooltip">Himalayan Dome-A</div>
+        </div>
+
+        <div class="hive-node node-2" data-id="2">
+          <div class="node-pulse"></div>
+          <div class="node-core"></div>
+          <div class="node-tooltip">Arctic Geo-Dome-B</div>
+        </div>
+
+        <div class="hive-node node-3" data-id="3">
+          <div class="node-pulse"></div>
+          <div class="node-core"></div>
+          <div class="node-tooltip">Pacific Sanctuary-C</div>
+        </div>
+      </div>
+
+      <div class="hive-diagnostic-card glass-panel">
+        <div class="diag-title-row">
+          <h3 id="diag-title">HIVE DOME ALPHA</h3>
+          <span class="diag-origin-badge" id="diag-origin">NEO-HIMALAYAS (ZONE 9)</span>
+        </div>
+
+        <div class="diag-stat-grid">
+          <div class="diag-stat-item">
+            <div class="diag-stat-label">Core Temperature</div>
+            <div class="diag-stat-value" id="diag-temp">21.4°C (Ambient: -2°C)</div>
+          </div>
+          <div class="diag-stat-item">
+            <div class="diag-stat-label">Relative Humidity</div>
+            <div class="diag-stat-value" id="diag-hum">41.8%</div>
+          </div>
+          <div class="diag-stat-item">
+            <div class="diag-stat-label">Drone Pollinators</div>
+            <div class="diag-stat-value" id="diag-drones">12,450 Units</div>
+          </div>
+          <div class="diag-stat-item">
+            <div class="diag-stat-label">Harvested Output</div>
+            <div class="diag-stat-value" id="diag-yield">1,840 Liters</div>
+          </div>
+        </div>
+
+        <div class="diag-chart-section">
+          <div class="diag-chart-label">
+            <span>DOME STORAGE CAPACITY</span>
+            <span id="diag-chart-val">84% Capacity</span>
+          </div>
+          <div class="diag-chart-bar-container">
+            <div class="diag-chart-bar" id="diag-chart-bar" style="width: 84%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Shop Section -->
+  <section id="store">
+    <div style="text-align: center;">
+      <h2>Acquisitions</h2>
+      <span class="section-subtitle">Secure Your Molecular Grade Flask</span>
+    </div>
+
+    <div class="store-grid">
+      <div class="product-card glass-panel" data-id="uba-quantum-honey" data-name="UBA's Quantum Honey" data-price="180.00" data-spec="Batch #088 | Purity 99.98%" data-img="assets/honey_jar_futuristic.png">
+        <span class="product-tag">SELECT RELEASE</span>
+        
+        <!-- Left placeholder where the WebGL 3D Jar slides into when scrolled to this page -->
+        <div class="product-img-placeholder"></div>
+
+        <div class="product-info">
+          <h3>UBA'S QUANTUM HONEY</h3>
+          <span class="product-meta">Grade S Molecular // Raw Honey</span>
+          <p class="product-desc">
+            Single-dome micro-batch. Rich in structural floral proteins and bio-active microelements. Vacuum sealed inside a refractive cryo-protective glass cell.
+          </p>
+
+          <div class="product-specs">
+            <div class="product-spec-item">Volume:<span>500 mL</span></div>
+            <div class="product-spec-item">Batch Code:<span>UBA-88X</span></div>
+            <div class="product-spec-item">pH Ratio:<span>3.91</span></div>
+            <div class="product-spec-item">Viscosity:<span>2,200 cps</span></div>
+          </div>
+
+          <div class="product-footer">
+            <div class="product-price">
+              <span class="price-label">ESTIMATED PRICE</span>
+              <span class="price-val">$180.00</span>
+            </div>
+            <button class="btn-primary add-cart-btn">
+              <span>Acquire Jar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sliding Shopping Cart Drawer -->
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>CARGO LOGISTICS</h3>
+      <button class="cart-close-btn" id="cart-close-btn" aria-label="Close Cargo List">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="cart-items-container" id="cart-items-container">
+      <p class="cart-empty-message">ACQUISITION BAY IS EMPTY.<br>[AWAITING CARGO IDENTIFIER]</p>
+    </div>
+
+    <div class="cart-drawer-footer">
+      <div class="cart-summary-row">
+        <span class="summary-label">SUBTOTAL</span>
+        <span class="summary-value" id="subtotal-val">$0.00</span>
+      </div>
+      <div class="cart-summary-row">
+        <span class="summary-label">QUANTUM TAX (8%)</span>
+        <span class="summary-value" id="tax-val">$0.00</span>
+      </div>
+      <div class="cart-summary-row total">
+        <span class="summary-label">TOTAL CHARGES</span>
+        <span class="summary-value" id="total-val">$0.00</span>
+      </div>
+      <button class="btn-primary checkout-btn" id="checkout-btn">
+        <span>AUTHORIZE ORDER</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Checkout Success Modal -->
+  <div class="checkout-overlay" id="checkout-overlay">
+    <div class="receipt-modal glass-panel">
+      <div class="receipt-header">
+        <div class="receipt-logo">UBA QUANTUM HIVE-NET</div>
+        <div class="receipt-time">ORDER COMPLETED // SYSTEM INVOICE</div>
+      </div>
+      
+      <div class="receipt-body">
+        <div id="receipt-items"></div>
+        <br>
+        <div class="receipt-line">
+          <span>SUBTOTAL</span>
+          <span id="receipt-subtotal">$0.00</span>
+        </div>
+        <div class="receipt-line">
+          <span>TAX (8%)</span>
+          <span id="receipt-tax">$0.00</span>
+        </div>
+        <div class="receipt-line" style="font-weight: bold; color: var(--accent-gold);">
+          <span>TOTAL</span>
+          <span id="receipt-total">$0.00</span>
+        </div>
+        <br>
+        <div class="receipt-line" style="font-size: 0.75rem; color: var(--text-muted); border-top: 1px dashed rgba(255,255,255,0.1); padding-top:10px;">
+          <span>LEDGER TX:</span>
+          <span id="receipt-order-hash">0x88ea...d88e</span>
+        </div>
+      </div>
+
+      <div class="receipt-footer">
+        <div class="receipt-status">BLOCKCHAIN LEDGER SYNCED</div>
+        <button class="receipt-close" id="receipt-close">CLOSE CONNECTION</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <svg class="logo-icon" viewBox="0 0 100 100" fill="none" stroke="#e0a96d" stroke-width="3">
+            <polygon points="50,15 80,32 80,68 50,85 20,68 20,32"/>
+            <circle cx="50" cy="50" r="10" fill="#e0a96d"/>
+          </svg>
+          UBA'S HONEY
+        </a>
+        <p>Blending biological elegance with scroll-bound WebGL graphics. Pure molecular honey of the quantum age.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>HIVE INTEGRITY</h4>
+        <ul>
+          <li><a href="#tech">Harvest Protocol</a></li>
+          <li><a href="#hive-map">Coordinates</a></li>
+          <li><a href="#analyzer">Purity Metrics</a></li>
+          <li><a href="#authenticator">Decentralized Logs</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>REGISTRY</h4>
+        <ul>
+          <li><a href="#">Security Protocol</a></li>
+          <li><a href="#">Smart Contract Registry</a></li>
+          <li><a href="#">Ledger Operations</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2088 UBA'S HONEY. ALL RIGHTS RESERVED. QUANTUM-ENCRYPTED DATA FEED.</p>
+      <div class="footer-bottom-links">
+        <a href="#">TERMS_OF_SERVICE</a>
+        <a href="#">PRIVACY_LEDGER</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>

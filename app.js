@@ -17,6 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // =========================================================================
+  // 1b. Mobile Navigation Drawer Toggle
+  // =========================================================================
+  const menuToggleBtn = document.getElementById('menu-toggle-btn');
+  const navContainer = document.querySelector('.nav-container');
+  const navLinks = document.querySelectorAll('.nav-links a:not(#mobile-contact-btn)');
+  const mobileContactBtn = document.getElementById('mobile-contact-btn');
+
+  if (menuToggleBtn && navContainer) {
+    menuToggleBtn.addEventListener('click', () => {
+      menuToggleBtn.classList.toggle('open');
+      navContainer.classList.toggle('open');
+    });
+
+    // Close mobile nav when clicking any regular link
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        menuToggleBtn.classList.remove('open');
+        navContainer.classList.remove('open');
+      });
+    });
+  }
+
 
   // =========================================================================
   // 2. Product Category Filtering
@@ -48,6 +71,34 @@ document.addEventListener('DOMContentLoaded', () => {
           card.classList.add('hidden');
         }
       });
+    });
+  });
+
+  // =========================================================================
+  // 2b. Mobile Variety Click Accordion
+  // =========================================================================
+  const varietyItems = document.querySelectorAll('.variety-item');
+  varietyItems.forEach(item => {
+    const descText = item.getAttribute('data-desc');
+    const descDiv = document.createElement('div');
+    descDiv.classList.add('variety-desc-mobile');
+    descDiv.textContent = descText;
+    item.appendChild(descDiv);
+
+    item.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768) {
+        const isCurrentlyActive = item.classList.contains('active');
+        
+        // Collapse all others
+        varietyItems.forEach(otherItem => {
+          otherItem.classList.remove('active');
+        });
+
+        // Toggle current one
+        if (!isCurrentlyActive) {
+          item.classList.add('active');
+        }
+      }
     });
   });
 
@@ -192,6 +243,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Contact Modal Events
   if (contactBtn) contactBtn.addEventListener('click', () => openModal(contactModal));
+  if (mobileContactBtn) {
+    mobileContactBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (navContainer) navContainer.classList.remove('open');
+      if (menuToggleBtn) menuToggleBtn.classList.remove('open');
+      openModal(contactModal);
+    });
+  }
   if (contactClose) contactClose.addEventListener('click', () => closeModal(contactModal));
 
   // Promo Modal Events

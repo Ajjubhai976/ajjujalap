@@ -1,746 +1,567 @@
-/*
-  UBA's Honey - Minimal 3D Glassmorphic JS
-  Features: Three.js WebGL scroll-bound animations, Purity analyzer, Blockchain ledger, Operations map, Cart drawer.
-*/
-
-document.addEventListener('DOMContentLoaded', () => {
-
-  // =========================================================================
-  // 1. Three.js 3D WebGL Setup (Jar and Bee models with Scroll Animations)
-  // =========================================================================
-  const webglContainer = document.getElementById('webgl-container');
-  let scene, camera, renderer;
-  let jarGroup, beeGroup;
-  let wingLeft, wingRight;
-  let scrollPercent = 0;
-
-  if (webglContainer && typeof THREE !== 'undefined') {
-    
-    // Scene setup
-    scene = new THREE.Scene();
-    
-    // Camera
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 8;
-
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    webglContainer.appendChild(renderer.domElement);
-
-    // Resize Handler
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
-
-    const goldLight = new THREE.PointLight(0xe0a96d, 5, 20);
-    goldLight.position.set(5, 5, 5);
-    scene.add(goldLight);
-
-    const whiteLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    whiteLight.position.set(-5, 8, 2);
-    scene.add(whiteLight);
-
-    // -- 3D Honey Jar Mesh Generation --
-    jarGroup = new THREE.Group();
-
-    // Jar Cap (Gold Metal)
-    const capGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.15, 32);
-    const capMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37,
-      metalness: 0.9,
-      roughness: 0.15,
-      name: 'cap'
-    });
-    const capMesh = new THREE.Mesh(capGeo, capMat);
-    capMesh.position.y = 0.9;
-    jarGroup.add(capMesh);
-
-    // Jar Neck
-    const neckGeo = new THREE.CylinderGeometry(0.58, 0.58, 0.1, 32);
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      roughness: 0.05,
-      metalness: 0.05,
-      transmission: 0.95,
-      transparent: true,
-      opacity: 1,
-      thickness: 0.18,
-      ior: 1.5,
-      name: 'glass'
-    });
-    const neckMesh = new THREE.Mesh(neckGeo, glassMat);
-    neckMesh.position.y = 0.78;
-    jarGroup.add(neckMesh);
-
-    // Jar Body (Outer Glass)
-    const bodyGeo = new THREE.CylinderGeometry(0.72, 0.72, 1.4, 32);
-    const bodyMesh = new THREE.Mesh(bodyGeo, glassMat);
-    bodyMesh.position.y = 0.03;
-    jarGroup.add(bodyMesh);
-
-    // Honey Core (Inner Liquid)
-    const honeyGeo = new THREE.CylinderGeometry(0.63, 0.63, 1.25, 32);
-    const honeyMat = new THREE.MeshStandardMaterial({
-      color: 0xffa000,
-      roughness: 0.1,
-      metalness: 0.1,
-      emissive: 0xff6f00,
-      emissiveIntensity: 0.45
-    });
-    const honeyMesh = new THREE.Mesh(honeyGeo, honeyMat);
-    honeyMesh.position.y = 0.03;
-    jarGroup.add(honeyMesh);
-    
-    // Add to Scene
-    scene.add(jarGroup);
-
-    // -- 3D Cyber-Bee Mesh Generation --
-    beeGroup = new THREE.Group();
-
-    // Thorax (Front body)
-    const thoraxGeo = new THREE.SphereGeometry(0.18, 16, 16);
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.4, metalness: 0.8 });
-    const thoraxMesh = new THREE.Mesh(thoraxGeo, blackMat);
-    beeGroup.add(thoraxMesh);
-
-    // Abdomen segments (Striped Gold/Black)
-    const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.7 });
-    
-    const abd1Geo = new THREE.SphereGeometry(0.20, 16, 16);
-    const abd1Mesh = new THREE.Mesh(abd1Geo, goldMat);
-    abd1Mesh.position.z = -0.22;
-    beeGroup.add(abd1Mesh);
-
-    const abd2Geo = new THREE.SphereGeometry(0.21, 16, 16);
-    const abd2Mesh = new THREE.Mesh(abd2Geo, blackMat);
-    abd2Mesh.position.z = -0.42;
-    beeGroup.add(abd2Mesh);
-
-    const abd3Geo = new THREE.SphereGeometry(0.15, 16, 16);
-    const abd3Mesh = new THREE.Mesh(abd3Geo, goldMat);
-    abd3Mesh.position.z = -0.6;
-    beeGroup.add(abd3Mesh);
-
-    // Head
-    const headGeo = new THREE.SphereGeometry(0.12, 16, 16);
-    const headMesh = new THREE.Mesh(headGeo, blackMat);
-    headMesh.position.set(0, 0.05, 0.22);
-    beeGroup.add(headMesh);
-
-    // Eyes
-    const eyeGeo = new THREE.SphereGeometry(0.04, 8, 8);
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.1 });
-    const eyeLeft = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeLeft.position.set(0.07, 0.08, 0.28);
-    const eyeRight = eyeLeft.clone();
-    eyeRight.position.x = -0.07;
-    beeGroup.add(eyeLeft);
-    beeGroup.add(eyeRight);
-
-    // Wings
-    const wingGeo = new THREE.BoxGeometry(0.45, 0.01, 0.2);
-    const wingMat = new THREE.MeshPhysicalMaterial({
-      color: 0xe0ffff,
-      transmission: 0.9,
-      transparent: true,
-      opacity: 0.7,
-      roughness: 0.1
-    });
-
-    // Left Wing Pivot Setup
-    wingLeft = new THREE.Mesh(wingGeo, wingMat);
-    wingLeft.geometry.translate(0.22, 0, 0); // offset origin to pivot point
-    wingLeft.position.set(0.12, 0.12, -0.05);
-    beeGroup.add(wingLeft);
-
-    // Right Wing Pivot Setup
-    wingRight = new THREE.Mesh(wingGeo, wingMat);
-    wingRight.geometry.translate(-0.22, 0, 0); // offset origin to pivot point
-    wingRight.position.set(-0.12, 0.12, -0.05);
-    beeGroup.add(wingRight);
-
-    // Scale bee down slightly
-    beeGroup.scale.set(0.9, 0.9, 0.9);
-    scene.add(beeGroup);
-
-    // Scroll progress calculations
-    const calculateScrollPercent = () => {
-      const h = document.documentElement, 
-            b = document.body,
-            st = 'scrollTop',
-            sh = 'scrollHeight';
-      scrollPercent = (h[st] || b[st]) / ((h[sh] || b[sh]) - window.innerHeight);
-      if (isNaN(scrollPercent)) scrollPercent = 0;
-    };
-    window.addEventListener('scroll', calculateScrollPercent);
-    calculateScrollPercent(); // init
-
-    // Lerp helper
-    const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
-
-    // Scroll Coordinates Mapping Configuration
-    // Sections map to: 0.0 (Hero), 0.2 (Tech), 0.4 (Analyzer), 0.6 (Ledger), 0.8 (Map), 1.0 (Store)
-    const getTargetCoordinates = (pct, time) => {
-      let jarTarget = { x: 2.2, y: 0.2, z: 0, rx: 0.1, ry: time * 0.4, rz: 0 };
-      let beeTarget = { x: -1.8, y: 1.4, z: 0.5, rx: 0.1, ry: 0.8, rz: 0 };
-
-      // Make responsive adjustments for smaller screen widths
-      const widthFactor = window.innerWidth < 1024 ? 0 : 1;
-
-      if (!widthFactor) {
-        // Mobile layout: position elements behind text in center
-        jarTarget.x = 0; jarTarget.y = 0.5; jarTarget.z = -1;
-        beeTarget.x = 0; beeTarget.y = 2.0; beeTarget.z = -1.5;
-        return { jarTarget, beeTarget };
-      }
-
-      if (pct < 0.2) {
-        // Transition: Hero -> Tech
-        const t = pct / 0.2;
-        jarTarget.x = lerp(2.2, -2.4, t);
-        jarTarget.y = lerp(0.2, 0.3, t);
-        jarTarget.z = lerp(0, -0.5, t);
-        jarTarget.rx = lerp(0.1, 0.25, t);
-        jarTarget.ry = lerp(time * 0.4, time * 0.3 + 1.5, t);
-        jarTarget.rz = lerp(0, -0.1, t);
-
-        beeTarget.x = lerp(-1.8, 2.0, t);
-        beeTarget.y = lerp(1.4, -0.5, t);
-        beeTarget.z = lerp(0.5, 0.6, t);
-        beeTarget.rx = lerp(0.1, -0.1, t);
-        beeTarget.ry = lerp(0.8, -0.4, t);
-      } 
-      else if (pct < 0.4) {
-        // Transition: Tech -> Analyzer
-        const t = (pct - 0.2) / 0.2;
-        jarTarget.x = lerp(-2.4, 2.3, t);
-        jarTarget.y = lerp(0.3, -0.2, t);
-        jarTarget.z = lerp(-0.5, 0, t);
-        jarTarget.rx = lerp(0.25, -0.05, t);
-        jarTarget.ry = lerp(time * 0.3 + 1.5, time * 0.4 - 0.5, t);
-        jarTarget.rz = lerp(-0.1, 0.05, t);
-
-        beeTarget.x = lerp(2.0, -2.4, t);
-        beeTarget.y = lerp(-0.5, 1.2, t);
-        beeTarget.z = lerp(0.6, -1.0, t);
-        beeTarget.rx = lerp(-0.1, 0.05, t);
-        beeTarget.ry = lerp(-0.4, 1.0, t);
-      } 
-      else if (pct < 0.6) {
-        // Transition: Analyzer -> Ledger
-        const t = (pct - 0.4) / 0.2;
-        jarTarget.x = lerp(2.3, -2.6, t);
-        jarTarget.y = lerp(-0.2, 0.2, t);
-        jarTarget.z = lerp(0, -1.5, t);
-        jarTarget.rx = lerp(-0.05, 0.1, t);
-        jarTarget.ry = lerp(time * 0.4 - 0.5, time * 0.2 + 2.0, t);
-        jarTarget.rz = lerp(0.05, -0.05, t);
-
-        beeTarget.x = lerp(-2.4, 2.2, t);
-        beeTarget.y = lerp(1.2, 0.6, t);
-        beeTarget.z = lerp(-1.0, 0.2, t);
-        beeTarget.rx = lerp(0.05, 0.0, t);
-        beeTarget.ry = lerp(1.0, -0.8, t);
-      } 
-      else if (pct < 0.8) {
-        // Transition: Ledger -> Map
-        const t = (pct - 0.6) / 0.2;
-        jarTarget.x = lerp(-2.6, 0.0, t);
-        jarTarget.y = lerp(0.2, 1.8, t);
-        jarTarget.z = lerp(-1.5, -4.5, t);
-        jarTarget.rx = lerp(0.1, 0.4, t);
-        jarTarget.ry = lerp(time * 0.2 + 2.0, time * 0.5, t);
-        jarTarget.rz = lerp(-0.05, 0.0, t);
-
-        beeTarget.x = lerp(2.2, -1.2, t);
-        beeTarget.y = lerp(0.6, -0.6, t);
-        beeTarget.z = lerp(0.2, -1.2, t);
-        beeTarget.rx = lerp(0.0, -0.2, t);
-        beeTarget.ry = lerp(-0.8, 0.6, t);
-      } 
-      else {
-        // Transition: Map -> Store
-        const t = (pct - 0.8) / 0.2;
-        jarTarget.x = lerp(0.0, -2.1, t);
-        jarTarget.y = lerp(1.8, -0.2, t);
-        jarTarget.z = lerp(-4.5, 0.8, t);
-        jarTarget.rx = lerp(0.4, 0.08, t);
-        jarTarget.ry = lerp(time * 0.5, time * 0.4 + 0.5, t);
-        jarTarget.rz = lerp(0.0, 0.0, t);
-
-        beeTarget.x = lerp(-1.2, 1.8, t);
-        beeTarget.y = lerp(-0.6, -1.1, t);
-        beeTarget.z = lerp(-1.2, 1.2, t);
-        beeTarget.rx = lerp(-0.2, 0.08, t);
-        beeTarget.ry = lerp(0.6, -0.6, t);
-      }
-
-      return { jarTarget, beeTarget };
-    };
-
-    // Actual coordinates to lerp
-    let jarCurrent = { x: 2.2, y: 0.2, z: 0, rx: 0.1, ry: 0, rz: 0 };
-    let beeCurrent = { x: -1.8, y: 1.4, z: 0.5, rx: 0.1, ry: 0.8, rz: 0 };
-
-    // Animation Loop
-    let clock = new THREE.Clock();
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-
-      const time = clock.getElapsedTime();
-
-      // Wing flapping animation
-      if (wingLeft && wingRight) {
-        wingLeft.rotation.z = Math.sin(time * 65) * 0.5;
-        wingRight.rotation.z = -Math.sin(time * 65) * 0.5;
-      }
-
-      // Calculate Target Positions
-      const { jarTarget, beeTarget } = getTargetCoordinates(scrollPercent, time);
-
-      // Interpolate actual positions (smooth lerping)
-      jarCurrent.x = lerp(jarCurrent.x, jarTarget.x, 0.06);
-      jarCurrent.y = lerp(jarCurrent.y, jarTarget.y, 0.06);
-      jarCurrent.z = lerp(jarCurrent.z, jarTarget.z, 0.06);
-      jarCurrent.rx = lerp(jarCurrent.rx, jarTarget.rx, 0.06);
-      jarCurrent.ry = lerp(jarCurrent.ry, jarTarget.ry, 0.06);
-      jarCurrent.rz = lerp(jarCurrent.rz, jarTarget.rz, 0.06);
-
-      beeCurrent.x = lerp(beeCurrent.x, beeTarget.x, 0.06);
-      beeCurrent.y = lerp(beeCurrent.y, beeTarget.y, 0.06);
-      beeCurrent.z = lerp(beeCurrent.z, beeTarget.z, 0.06);
-      beeCurrent.rx = lerp(beeCurrent.rx, beeTarget.rx, 0.06);
-      beeCurrent.ry = lerp(beeCurrent.ry, beeTarget.ry, 0.06);
-
-      // Apply coordinates + subtle hovering offset
-      jarGroup.position.set(jarCurrent.x, jarCurrent.y + Math.sin(time * 1.5) * 0.04, jarCurrent.z);
-      jarGroup.rotation.set(jarCurrent.rx, jarCurrent.ry, jarCurrent.rz);
-
-      beeGroup.position.set(beeCurrent.x, beeCurrent.y + Math.sin(time * 2.5) * 0.06, beeCurrent.z);
-      // Face flight direction helper (subtle tilt)
-      beeGroup.rotation.set(beeCurrent.rx, beeCurrent.ry, Math.sin(time * 2) * 0.03);
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-  }
-
-  // =========================================================================
-  // 2. Interactive Molecular Purity Analyzer
-  // =========================================================================
-  const viscositySlider = document.getElementById('viscosity-slider');
-  const enzymeSlider = document.getElementById('enzyme-slider');
-  const pollenSlider = document.getElementById('pollen-slider');
-  const hmfSlider = document.getElementById('hmf-slider');
-
-  const viscosityVal = document.getElementById('viscosity-val');
-  const enzymeVal = document.getElementById('enzyme-val');
-  const pollenVal = document.getElementById('pollen-val');
-  const hmfVal = document.getElementById('hmf-val');
-
-  const gaugePercentage = document.getElementById('gauge-percentage');
-  const gaugeFill = document.getElementById('gauge-fill');
-  const gradeBanner = document.getElementById('grade-banner');
-  const statusReadout = document.getElementById('status-readout');
-
-  const updateAnalyzer = () => {
-    const visc = parseFloat(viscositySlider.value);
-    const enz = parseFloat(enzymeSlider.value);
-    const pollen = parseFloat(pollenSlider.value);
-    const hmf = parseFloat(hmfSlider.value);
-
-    viscosityVal.innerText = `${visc.toLocaleString()} cps`;
-    enzymeVal.innerText = `${enz} DU`;
-    pollenVal.innerText = `${pollen}%`;
-    hmfVal.innerText = `${hmf} mg/kg`;
-
-    // Visual background fill ratios for custom sliders
-    const sliders = [viscositySlider, enzymeSlider, pollenSlider, hmfSlider];
-    sliders.forEach(slider => {
-      const min = parseFloat(slider.min) || 0;
-      const max = parseFloat(slider.max) || 100;
-      const val = parseFloat(slider.value);
-      const pct = ((val - min) / (max - min)) * 100;
-      slider.style.setProperty('--percent', `${pct}%`);
-    });
-
-    // Purity logic
-    const pollFactor = pollen / 100;
-    const enzFactor = enz / 40;
-    const hmfFactor = Math.max(0, 1 - (hmf / 40));
-    
-    const optimalVisc = 2200;
-    const viscVariance = Math.abs(visc - optimalVisc) / 2200;
-    const viscFactor = Math.max(0, 1 - viscVariance);
-
-    let purity = (pollFactor * 40) + (enzFactor * 30) + (hmfFactor * 20) + (viscFactor * 10);
-    purity = Math.min(99.99, Math.max(10, purity));
-
-    gaugePercentage.innerHTML = `${purity.toFixed(2)}<span>%</span>`;
-
-    // SVG radial fill offset
-    const circumference = 565.48;
-    const offset = circumference - (circumference * purity) / 100;
-    gaugeFill.style.strokeDashoffset = offset;
-
-    // Minimal style color overrides
-    if (purity >= 97) {
-      gradeBanner.innerText = 'S-GRADE QUANTUM';
-      gradeBanner.style.color = '#e0a96d';
-      gaugeFill.style.stroke = '#e0a96d';
-      statusReadout.innerText = 'SYS_OK: MOLECULAR INTEGRITY SECURED.';
-    } else if (purity >= 88) {
-      gradeBanner.innerText = 'A-GRADE PURE';
-      gradeBanner.style.color = '#ffffff';
-      gaugeFill.style.stroke = '#ffffff';
-      statusReadout.innerText = 'SYS_OK: STANDARD PURITY RATIO MATCH.';
-    } else if (purity >= 70) {
-      gradeBanner.innerText = 'B-GRADE BIOLOGICAL';
-      gradeBanner.style.color = '#a0aec0';
-      gaugeFill.style.stroke = '#a0aec0';
-      statusReadout.innerText = 'SYS_NOTICE: INCREASE MATURATION CYCLE.';
-    } else {
-      gradeBanner.innerText = 'RE-FILTRATION ADV';
-      gradeBanner.style.color = '#a77c50';
-      gaugeFill.style.stroke = '#a77c50';
-      statusReadout.innerText = 'SYS_WARNING: UNREGULATED VISCOSITY RATIO.';
-    }
-  };
-
-  if (viscositySlider) {
-    viscositySlider.addEventListener('input', updateAnalyzer);
-    enzymeSlider.addEventListener('input', updateAnalyzer);
-    pollenSlider.addEventListener('input', updateAnalyzer);
-    hmfSlider.addEventListener('input', updateAnalyzer);
-    updateAnalyzer();
-  }
-
-  // =========================================================================
-  // 3. Blockchain Batch Authenticator
-  // =========================================================================
-  const authInput = document.getElementById('auth-input');
-  const authBtn = document.getElementById('auth-btn');
-  const consoleContent = document.getElementById('console-content');
-
-  const mockDatabase = {
-    'UBA-88X': {
-      origin: 'Himalayan Sanctuary (Dome 3-A)',
-      pollination: 'Alpine Goldenrod & Lavender',
-      integrity: '99.982% Molecular purity',
-      smartContract: '0x88eA77f6bEE40C519d00921200df1240954cfE39',
-      hiveID: 'HD-8890',
-      timestamp: '2088-05-18 10:24:15 UTC'
-    },
-    'UBA-99Y': {
-      origin: 'Arctic Geo-Dome (Sector 12-F)',
-      pollination: 'Cryo-Tundra Moss & Violet',
-      integrity: '99.994% Molecular purity',
-      smartContract: '0x99aF0288fEE40C0032cd012398402df984534ef0',
-      hiveID: 'HD-9941',
-      timestamp: '2088-06-02 04:12:30'
-    },
-    'NEO-BEE7': {
-      origin: 'Pacific Sanctuary (Dome 7-C)',
-      pollination: 'Coral Aster & Sea Aster Pollen',
-      integrity: '99.954% Molecular purity',
-      smartContract: '0x77cE1277fEE4091Acd02934823902df352932fA0',
-      hiveID: 'HD-0742',
-      timestamp: '2088-06-08 18:45:09'
-    }
-  };
-
-  const printToConsole = (lines, delay = 250) => {
-    consoleContent.innerHTML = '';
-    let i = 0;
-    const typeLine = () => {
-      if (i < lines.length) {
-        const line = document.createElement('span');
-        line.className = 'console-line ' + (lines[i].type || '');
-        line.innerHTML = lines[i].text;
-        consoleContent.appendChild(line);
-        consoleContent.scrollTop = consoleContent.scrollHeight;
-        i++;
-        setTimeout(typeLine, delay);
-      }
-    };
-    typeLine();
-  };
-
-  if (authBtn && authInput) {
-    authBtn.addEventListener('click', () => {
-      const code = authInput.value.trim().toUpperCase();
-      if (!code) {
-        printToConsole([{ text: '>&nbsp;[LEDGER]: CODE REQUIRED.', type: 'line-warning' }]);
-        return;
-      }
-
-      printToConsole([
-        { text: `>&nbsp;QUERYING INDEX [${code}]...` },
-        { text: '>&nbsp;CONNECTING HIVE LEDGER CLIENT...' },
-        { text: '>&nbsp;RESOLVING BLOCK DATA...' }
-      ], 150);
-
-      setTimeout(() => {
-        if (mockDatabase[code]) {
-          const data = mockDatabase[code];
-          printToConsole([
-            { text: '>&nbsp;LEDGER MATCH FOUND.', type: 'line-success' },
-            { text: `>&nbsp;&nbsp;&nbsp;TX:&nbsp;<span class="blockchain-badge">${data.smartContract.substring(0,20)}...</span>` },
-            { text: `>&nbsp;&nbsp;&nbsp;DATE:&nbsp;${data.timestamp}` },
-            { text: `>&nbsp;&nbsp;&nbsp;ORIGIN:&nbsp;${data.origin}` },
-            { text: `>&nbsp;&nbsp;&nbsp;FLORA:&nbsp;${data.pollination}` },
-            { text: `>&nbsp;&nbsp;&nbsp;INTEGRITY:&nbsp;${data.integrity}`, type: 'line-success' }
-          ], 100);
-        } else {
-          printToConsole([
-            { text: '>&nbsp;RESOLVE INDEX: FAILED.', type: 'line-danger' },
-            { text: '>&nbsp;LEDGER WARNING: UNREGISTERED SIGNATURE.', type: 'line-danger' }
-          ], 100);
-        }
-      }, 700);
-    });
-  }
-
-  // =========================================================================
-  // 4. Interactive Hive Status Map
-  // =========================================================================
-  const hiveNodes = document.querySelectorAll('.hive-node');
-  const diagTitle = document.getElementById('diag-title');
-  const diagOrigin = document.getElementById('diag-origin');
-  const diagTemp = document.getElementById('diag-temp');
-  const diagHum = document.getElementById('diag-hum');
-  const diagDrones = document.getElementById('diag-drones');
-  const diagYield = document.getElementById('diag-yield');
-  const diagChartBar = document.getElementById('diag-chart-bar');
-  const diagChartVal = document.getElementById('diag-chart-val');
-
-  const hiveData = {
-    '1': {
-      title: 'HIVE DOME ALPHA',
-      origin: 'NEO-HIMALAYAS (ZONE 9)',
-      temp: '21.4°C (Ambient: -2°C)',
-      hum: '41.8%',
-      drones: '12,450 active units',
-      yield: '1,840 Liters',
-      barPercent: '84%',
-      val: '84% Capacity'
-    },
-    '2': {
-      title: 'HIVE DOME BETA',
-      origin: 'ARCTIC BIO-DOME (SECTOR 7)',
-      temp: '19.8°C (Ambient: -28°C)',
-      hum: '35.2%',
-      drones: '9,800 active units',
-      yield: '1,220 Liters',
-      barPercent: '62%',
-      val: '62% Capacity'
-    },
-    '3': {
-      title: 'HIVE DOME GAMMA',
-      origin: 'PACIFIC DOME (SATELLITE 12)',
-      temp: '23.9°C (Ambient: 14°C)',
-      hum: '68.4%',
-      drones: '15,100 active units',
-      yield: '2,150 Liters',
-      barPercent: '95%',
-      val: '95% Capacity'
-    }
-  };
-
-  if (hiveNodes.length > 0) {
-    hiveNodes.forEach(node => {
-      node.addEventListener('click', () => {
-        const id = node.getAttribute('data-id');
-        const data = hiveData[id];
-        
-        hiveNodes.forEach(n => n.querySelector('.node-core').style.background = '');
-        node.querySelector('.node-core').style.background = '#e0a96d';
-
-        diagTitle.innerText = data.title;
-        diagOrigin.innerText = data.origin;
-        diagTemp.innerText = data.temp;
-        diagHum.innerText = data.hum;
-        diagDrones.innerText = data.drones;
-        diagYield.innerText = data.yield;
-        
-        diagChartBar.style.width = '0%';
-        setTimeout(() => {
-          diagChartBar.style.width = data.barPercent;
-          diagChartVal.innerText = data.val;
-        }, 100);
-      });
-    });
-  }
-
-  // =========================================================================
-  // 5. Minimal Cart & Ordering System
-  // =========================================================================
-  let cart = [];
-  const cartDrawer = document.getElementById('cart-drawer');
-  const cartToggleBtn = document.getElementById('cart-toggle-btn');
-  const cartCloseBtn = document.getElementById('cart-close-btn');
-  const cartItemsContainer = document.getElementById('cart-items-container');
-  const cartCount = document.getElementById('cart-count');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UBA's Honey | Pure Natural Honey</title>
+  <meta name="description" content="Pure premium natural honey by UBA's Honey. Sourced from the finest wilderness and packaged hygienically to maintain raw nutritional purity.">
   
-  const subtotalVal = document.getElementById('subtotal-val');
-  const taxVal = document.getElementById('tax-val');
-  const totalVal = document.getElementById('total-val');
-  const checkoutBtn = document.getElementById('checkout-btn');
+  <!-- Google Fonts for Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-  const checkoutOverlay = document.getElementById('checkout-overlay');
-  const receiptItems = document.getElementById('receipt-items');
-  const receiptSubtotal = document.getElementById('receipt-subtotal');
-  const receiptTax = document.getElementById('receipt-tax');
-  const receiptTotal = document.getElementById('receipt-total');
-  const receiptClose = document.getElementById('receipt-close');
-  const receiptOrderHash = document.getElementById('receipt-order-hash');
-
-  const toggleCart = () => {
-    cartDrawer.classList.toggle('open');
-  };
-
-  if (cartToggleBtn) cartToggleBtn.addEventListener('click', toggleCart);
-  if (cartCloseBtn) cartCloseBtn.addEventListener('click', toggleCart);
-
-  const updateCartTotals = () => {
-    let subtotal = 0;
-    cart.forEach(item => {
-      subtotal += item.price * item.qty;
-    });
-    const tax = subtotal * 0.08;
-    const total = subtotal + tax;
-
-    subtotalVal.innerText = `$${subtotal.toFixed(2)}`;
-    taxVal.innerText = `$${tax.toFixed(2)}`;
-    totalVal.innerText = `$${total.toFixed(2)}`;
-
-    const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-    cartCount.innerText = totalQty;
-    cartCount.style.display = totalQty > 0 ? 'flex' : 'none';
-  };
-
-  const renderCart = () => {
-    cartItemsContainer.innerHTML = '';
+  <!-- Header Navigation -->
+  <header>
+    <a href="#" class="logo" id="header-logo">
+      <span class="logo-circle">
+        <svg viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="4"/>
+          <!-- Simplified Bee Icon -->
+          <path d="M35,50 C35,42 42,35 50,35 C58,35 65,42 65,50 C65,58 58,65 50,65 C42,65 35,58 35,50 Z" fill="currentColor"/>
+          <path d="M42,50 L58,50 M50,42 L50,58" stroke="#fff" stroke-width="3"/>
+          <ellipse cx="44" cy="33" rx="6" ry="12" fill="currentColor" transform="rotate(-30 44 33)"/>
+          <ellipse cx="56" cy="33" rx="6" ry="12" fill="currentColor" transform="rotate(30 56 33)"/>
+        </svg>
+      </span>
+      <span class="logo-text">UBA's Honey</span>
+    </a>
     
-    if (cart.length === 0) {
-      cartItemsContainer.innerHTML = '<p class="cart-empty-message">ACQUISITION BAY IS EMPTY.<br>[AWAITING CARGO IDENTIFIER]</p>';
-      updateCartTotals();
-      return;
-    }
+    <nav class="nav-container">
+      <ul class="nav-links">
+        <li><a href="#product-gallery">Product</a></li>
+        <li><a href="#faqs">FAQs</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#harvest-experience">Activities</a></li>
+        <li><a href="#news">News</a></li>
+      </ul>
+    </nav>
 
-    cart.forEach(item => {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'cart-item';
-      itemEl.innerHTML = `
-        <img class="cart-item-img" src="${item.img}" alt="${item.name}">
-        <div class="cart-item-details">
-          <span class="cart-item-name">${item.name}</span>
-          <span class="cart-item-desc">${item.spec}</span>
-          <div class="cart-item-qty-row">
-            <div class="qty-control">
-              <button class="qty-btn dec-btn" data-id="${item.id}">-</button>
-              <span class="qty-val">${item.qty}</span>
-              <button class="qty-btn inc-btn" data-id="${item.id}">+</button>
-            </div>
-            <span class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</span>
+    <div class="header-actions">
+      <!-- Shopping Cart Button -->
+      <button class="cart-icon-btn" id="cart-toggle-btn" aria-label="Open Shopping Cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <span class="cart-count" id="cart-count">0</span>
+      </button>
+      <button class="contact-btn" id="contact-btn">Contact us</button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="hero">
+    <div class="hero-backdrop-text">
+      <div class="since-text">SINCE <span class="since-year">[1997]</span></div>
+      <div class="large-word natural">NAT</div>
+      <div class="large-word honey">HONEY</div>
+      <div class="large-word natural-end">AL</div>
+    </div>
+
+    <!-- Center Interactive Image Card (Glassmorphic Frame) -->
+    <div class="hero-center-card-wrapper">
+      <div class="hero-glass-card">
+        <img class="hero-card-img" src="assets/hero_hand_honey.png" alt="Pure raw honey dripping from a dipper">
+      </div>
+    </div>
+
+    <!-- Right Overflowing Honey Jar -->
+    <div class="hero-right-jar-wrapper">
+      <img class="hero-jar-img" src="assets/hero_honey_jar.png" alt="UBA's Premium Honey Jar">
+    </div>
+
+    <!-- Hero Content Footer Bar -->
+    <div class="hero-footer-content">
+      <div class="hero-desc-box">
+        <p class="hero-desc-text">Made from high quality pure honey, bringing purity and the best natural benefits for your health.</p>
+        <button class="hero-promo-btn" id="hero-promo-btn">
+          <span>GET 30% OFF YOUR FIRST BUY!</span>
+          <span class="arrow-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="7" y1="17" x2="17" y2="7"/>
+              <polyline points="7,7 17,7 17,17"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="hero-rating-box">
+        <div class="rating-avatars">
+          <img src="assets/reviewer.png" alt="Happy Honey customer">
+        </div>
+        <div class="rating-info">
+          <div class="stars">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <div class="rating-label">4.9/5 (Review)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Features, Variety & Beehive Illustration -->
+  <section class="features-section" id="services">
+    <div class="features-intro">
+      <p class="features-intro-text">
+        We provide a variety of quality genuine honey 🍯 guaranteed authenticity, without mixtures, and packaged 📦 hygienically to maintain its purity and natural benefits.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Left Column: Honey Jar & Box Packaging -->
+      <div class="features-visual">
+        <img src="assets/honey_packaging.png" alt="UBA's Honey minimalist packaging box and jar" class="packaging-img">
+      </div>
+
+      <!-- Center Column: Script Hand-written Honey Varieties -->
+      <div class="features-list-wrapper">
+        <ul class="variety-list">
+          <li class="variety-item" data-desc="Extracted from wild medicinal mountain herbs. Rich in antioxidants.">Herbal</li>
+          <li class="variety-item" data-desc="Crafted by bees from multiple floral blossoms. Balanced sweet taste.">Multifloral</li>
+          <li class="variety-item" data-desc="Resinous mixture gathered from tree buds. Strong immune-booster.">Propolis</li>
+          <li class="variety-item" data-desc="Rare dark honey from deep forest oak trees. Strong mineral profile.">Black</li>
+          <li class="variety-item" data-desc="Infused with premium garlic extracts. Ultimate natural antibiotic.">Garlic</li>
+          <li class="variety-item" data-desc="Secret food of the queen bee. Highly nourishing organic elixir.">Royal Jelly</li>
+        </ul>
+      </div>
+
+      <!-- Right Column: Artistic SVG Beehive & Bees Illustration -->
+      <div class="features-illustration">
+        <div class="illustration-container">
+          <svg viewBox="0 0 300 400" class="artistic-svg" fill="none">
+            <!-- Tree Branch -->
+            <path d="M300,50 Q200,60 140,80 T40,110" stroke="#8D5B1B" stroke-width="6" stroke-linecap="round"/>
+            <path d="M180,68 Q140,90 130,120" stroke="#8D5B1B" stroke-width="4" stroke-linecap="round"/>
+            <path d="M100,95 Q80,120 50,130" stroke="#8D5B1B" stroke-width="3" stroke-linecap="round"/>
+            
+            <!-- Leaves on Branch -->
+            <path d="M220,53 C220,40 240,45 230,55 C220,65 210,60 220,53 Z" fill="#6A9C78"/>
+            <path d="M160,70 C150,55 170,60 165,75 C160,85 155,80 160,70 Z" fill="#6A9C78"/>
+            <path d="M120,105 C110,95 125,95 125,110 C120,120 115,115 120,105 Z" fill="#6A9C78"/>
+            <path d="M70,105 C60,95 80,95 75,110 C70,120 65,115 70,105 Z" fill="#6A9C78"/>
+            
+            <!-- Hanging Rope for Beehive -->
+            <line x1="130" y1="120" x2="130" y2="170" stroke="#A77B4C" stroke-width="2.5" stroke-dasharray="3 3"/>
+            
+            <!-- Beehive -->
+            <g class="hover-shake">
+              <!-- Hive Shape -->
+              <path d="M100,200 C100,165 160,165 160,200 C160,200 175,225 170,250 C165,275 145,290 130,290 C115,290 95,275 90,250 C85,225 100,200 100,200 Z" fill="#ECAE4E"/>
+              <!-- Horizontal Ridges -->
+              <path d="M96,215 C110,225 150,225 164,215" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
+              <path d="M92,235 C110,245 150,245 168,235" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
+              <path d="M92,255 C110,265 150,265 168,255" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
+              <path d="M100,272 C112,280 148,280 160,272" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
+              <!-- Hive Entrance Hole -->
+              <circle cx="130" cy="245" r="10" fill="#4E3610"/>
+              <ellipse cx="130" cy="247" rx="7" ry="3" fill="#291C08"/>
+            </g>
+
+            <!-- Flying Bees around Hive -->
+            <g class="bee-flight-1">
+              <ellipse cx="70" cy="220" rx="6" ry="8" fill="#F4C430" transform="rotate(45 70 220)"/>
+              <path d="M70,214 C73,205 65,205 67,214" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
+              <path d="M70,226 C73,235 65,235 67,226" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
+              <line x1="66" y1="216" x2="74" y2="224" stroke="#4E3610" stroke-width="1.5"/>
+              <line x1="64" y1="220" x2="72" y2="228" stroke="#4E3610" stroke-width="1.5"/>
+            </g>
+            <g class="bee-flight-2">
+              <ellipse cx="200" cy="240" rx="8" ry="6" fill="#F4C430"/>
+              <path d="M196,234 C190,230 190,240 196,236" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
+              <path d="M204,234 C210,230 210,240 204,236" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
+              <line x1="196" y1="234" x2="196" y2="246" stroke="#4E3610" stroke-width="1.5"/>
+              <line x1="200" y1="234" x2="200" y2="246" stroke="#4E3610" stroke-width="1.5"/>
+              <line x1="204" y1="234" x2="204" y2="246" stroke="#4E3610" stroke-width="1.5"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: The Best Type of Honey (Gallery) -->
+  <section class="gallery-section" id="product-gallery">
+    <div class="gallery-header">
+      <div class="gallery-title-wrapper">
+        <span class="gallery-tag">Type of Honey</span>
+        <h2 class="gallery-title">The Best Type of Honey</h2>
+        <p class="gallery-desc">
+          Learn more about some of the products we take special pride in. Each of these items reflects our commitment to quality, innovation, and customer satisfaction. From carefully crafted designs to durable materials, we ensure every product stands out. We believe in delivering excellence, and that's why our customers trust us time and again. Discover how our unique products can make a difference in your life.
+        </p>
+      </div>
+      <div class="gallery-header-image">
+        <img src="assets/honey_collection.png" alt="A collection of premium organic honeys" class="collection-img">
+      </div>
+    </div>
+
+    <!-- Discover Your Honey Filter Block -->
+    <div class="filter-container">
+      <h3 class="filter-title">
+        <span class="bee-icon">🐝</span> Discover Your Honey <span class="bee-icon">🐝</span>
+      </h3>
+      
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-category="all">All</button>
+        <button class="filter-tab" data-category="liquid">Liquid</button>
+        <button class="filter-tab" data-category="creamed">Creamed</button>
+        <button class="filter-tab" data-category="forest">Forest</button>
+        <button class="filter-tab" data-category="meadow">Meadow</button>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="product-grid">
+      <!-- Wildflower Honey -->
+      <div class="product-card" data-category="liquid forest">
+        <div class="product-img-box">
+          <img src="assets/wildflower_honey.png" alt="Wildflower Honey" class="prod-img">
+        </div>
+        <div class="product-details">
+          <div class="product-main-info">
+            <h4 class="product-name">Wildflower Honey</h4>
+            <span class="product-rating">★ 4.8</span>
+          </div>
+          <div class="product-footer-info">
+            <span class="product-price">Rp 250.00</span>
+            <button class="add-to-cart-btn" data-id="wildflower" data-name="Wildflower Honey" data-price="250" data-img="assets/wildflower_honey.png" aria-label="Add to cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </button>
           </div>
         </div>
-      `;
-      cartItemsContainer.appendChild(itemEl);
-    });
+      </div>
 
-    document.querySelectorAll('.dec-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => adjustQty(e.target.getAttribute('data-id'), -1));
-    });
-    document.querySelectorAll('.inc-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => adjustQty(e.target.getAttribute('data-id'), 1));
-    });
+      <!-- Acacia Honey -->
+      <div class="product-card" data-category="liquid meadow">
+        <div class="product-img-box">
+          <img src="assets/acacia_honey.png" alt="Acacia Honey" class="prod-img">
+        </div>
+        <div class="product-details">
+          <div class="product-main-info">
+            <h4 class="product-name">Acacia Honey</h4>
+            <span class="product-rating">★ 4.9</span>
+          </div>
+          <div class="product-footer-info">
+            <span class="product-price">Rp 150.00</span>
+            <button class="add-to-cart-btn" data-id="acacia" data-name="Acacia Honey" data-price="150" data-img="assets/acacia_honey.png" aria-label="Add to cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
-    updateCartTotals();
-  };
+      <!-- Berry Honey -->
+      <div class="product-card" data-category="creamed forest">
+        <div class="product-img-box">
+          <img src="assets/berry_honey.png" alt="Berry Honey" class="prod-img">
+        </div>
+        <div class="product-details">
+          <div class="product-main-info">
+            <h4 class="product-name">Berry Honey</h4>
+            <span class="product-rating">★ 4.8</span>
+          </div>
+          <div class="product-footer-info">
+            <span class="product-price">Rp 210.00</span>
+            <button class="add-to-cart-btn" data-id="berry" data-name="Berry Honey" data-price="210" data-img="assets/berry_honey.png" aria-label="Add to cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  const adjustQty = (id, change) => {
-    const item = cart.find(x => x.id === id);
-    if (item) {
-      item.qty += change;
-      if (item.qty <= 0) {
-        cart = cart.filter(x => x.id !== id);
-      }
-      renderCart();
-    }
-  };
+  <!-- Section 4: Harvest Honey With Us -->
+  <section class="harvest-section" id="harvest-experience">
+    <!-- Overlay dripping SVG styling on top -->
+    <div class="honey-drips-bg">
+      <svg viewBox="0 0 1440 320" fill="none" preserveAspectRatio="none">
+        <path d="M0,0 L1440,0 L1440,160 C1380,180 1320,120 1260,130 C1200,140 1140,220 1080,240 C1020,260 960,220 900,200 C840,180 780,180 720,210 C660,240 600,300 540,290 C480,280 420,200 360,210 C300,220 240,320 180,300 C120,280 60,140 0,160 Z" fill="#ECAE4E" opacity="0.12"/>
+        <path d="M0,0 L1440,0 L1440,100 C1350,110 1260,80 1170,90 C1080,100 990,150 900,140 C810,130 720,60 630,70 C540,80 450,170 360,160 C270,150 180,40 90,60 C45,70 0,30 0,40 Z" fill="#ECAE4E" opacity="0.06"/>
+      </svg>
+    </div>
 
-  const addCartBtns = document.querySelectorAll('.add-cart-btn');
-  addCartBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const productCard = btn.closest('.product-card');
-      const id = productCard.getAttribute('data-id');
-      const name = productCard.getAttribute('data-name');
-      const spec = productCard.getAttribute('data-spec');
-      const price = parseFloat(productCard.getAttribute('data-price'));
-      const img = productCard.getAttribute('data-img');
+    <div class="harvest-header">
+      <div class="harvest-left">
+        <span class="harvest-tag">New Experience</span>
+        <h2 class="harvest-title">You Can Come Harvest Honey With Us</h2>
+      </div>
+      <div class="harvest-right">
+        <p class="harvest-desc-text">
+          Our harvest honey is pure, golden, and rich with natural goodness. Savor the taste of nature's sweetness, straight from the hive to your table.
+        </p>
+        <a href="#harvest-experience" class="learn-more-btn" id="learn-more-btn">
+          <span>LEARN MORE</span>
+          <span class="arrow-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="7" y1="17" x2="17" y2="7"/>
+              <polyline points="7,7 17,7 17,17"/>
+            </svg>
+          </span>
+        </a>
+      </div>
+    </div>
 
-      const existing = cart.find(x => x.id === id);
-      if (existing) {
-        existing.qty++;
-      } else {
-        cart.push({ id, name, spec, price, qty: 1, img });
-      }
+    <!-- Side-by-Side Photo Cards -->
+    <div class="harvest-grid">
+      <!-- Card 1: Beekeeper Harvesting -->
+      <div class="harvest-card scale-hover">
+        <div class="harvest-card-img-box">
+          <img src="assets/beekeeper.png" alt="Beekeeper in white suit harvesting honeycomb frame">
+        </div>
+      </div>
 
-      renderCart();
-      if (!cartDrawer.classList.contains('open')) {
-        toggleCart();
-      }
-    });
-  });
+      <!-- Card 2: Interactive Closeup with button -->
+      <div class="harvest-card Reservation-card scale-hover">
+        <div class="harvest-card-img-box">
+          <img src="assets/honeycomb_closeup.png" alt="Close up honey dripping from honeycomb frame">
+          <div class="harvest-card-overlay">
+            <h4 class="overlay-title">You Will Be Able To Taste Pure Honey From Nature</h4>
+            <button class="reservation-btn" id="reservation-btn">Reservation</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', () => {
-      if (cart.length === 0) return;
-      cartDrawer.classList.remove('open');
+    <!-- Quality presentation statement -->
+    <div class="harvest-footer-statement">
+      <p class="statement-text">
+        Since 1999, we have presented thousands of bottles of pure honey to meet customer needs for natural taste and the best quality.
+      </p>
+    </div>
+  </section>
 
-      receiptItems.innerHTML = '';
-      let subtotal = 0;
-      cart.forEach(item => {
-        const cost = item.price * item.qty;
-        subtotal += cost;
-        const line = document.createElement('div');
-        line.className = 'receipt-line';
-        line.innerHTML = `<span>${item.name} x${item.qty}</span><span>$${cost.toFixed(2)}</span>`;
-        receiptItems.appendChild(line);
-      });
+  <!-- Section 5: Testimonials -->
+  <section class="testimonials-section" id="faqs">
+    <div class="testimonial-header">
+      <span class="testimonial-tag">Our Testimonials</span>
+      <h2 class="testimonial-title">What Our Customers are Saying About Honey</h2>
+    </div>
 
-      const tax = subtotal * 0.08;
-      const total = subtotal + tax;
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-rating">★★★★★</div>
+        <p class="testimonial-quote">"This honey is pure magic. The Wildflower Honey is rich, flavorful, and you can truly taste the quality. The packaging is absolutely beautiful as well!"</p>
+        <div class="testimonial-user">
+          <div class="user-info">
+            <h5 class="user-name">Sarah Jenkins</h5>
+            <span class="user-role">Verified Buyer</span>
+          </div>
+        </div>
+      </div>
 
-      receiptSubtotal.innerText = `$${subtotal.toFixed(2)}`;
-      receiptTax.innerText = `$${tax.toFixed(2)}`;
-      receiptTotal.innerText = `$${total.toFixed(2)}`;
+      <div class="testimonial-card">
+        <div class="testimonial-rating">★★★★★</div>
+        <p class="testimonial-quote">"I tried the Acacia Honey with oranges and it has changed my morning tea routine forever. It has a delicate sweetness that is unmatched by store bought honeys."</p>
+        <div class="testimonial-user">
+          <div class="user-info">
+            <h5 class="user-name">Liam Martinez</h5>
+            <span class="user-role">Chef</span>
+          </div>
+        </div>
+      </div>
 
-      const randomHash = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      receiptOrderHash.innerText = randomHash.substring(0, 16) + '...' + randomHash.substring(randomHash.length - 8);
+      <div class="testimonial-card">
+        <div class="testimonial-rating">★★★★★</div>
+        <p class="testimonial-quote">"Excellent service and phenomenal honey. The reservation activity was a wonderful weekend experience for my family—highly recommend harvesting with them!"</p>
+        <div class="testimonial-user">
+          <div class="user-info">
+            <h5 class="user-name">Elena Rostova</h5>
+            <span class="user-role">Nature Enthusiast</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      checkoutOverlay.classList.add('active');
-      cart = [];
-      renderCart();
-    });
-  }
+  <!-- Sliding Shopping Cart Drawer -->
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>SHOPPING CART</h3>
+      <button class="cart-close-btn" id="cart-close-btn" aria-label="Close Cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
 
-  if (receiptClose) {
-    receiptClose.addEventListener('click', () => {
-      checkoutOverlay.classList.remove('active');
-    });
-  }
+    <div class="cart-items-container" id="cart-items-container">
+      <p class="cart-empty-message">Your shopping cart is empty.<br>Select a jar to get started!</p>
+    </div>
 
-});
+    <div class="cart-drawer-footer">
+      <div class="cart-summary-row">
+        <span class="summary-label">Subtotal</span>
+        <span class="summary-value" id="subtotal-val">Rp 0.00</span>
+      </div>
+      <div class="cart-summary-row">
+        <span class="summary-label">Shipping</span>
+        <span class="summary-value" id="shipping-val">Free</span>
+      </div>
+      <div class="cart-summary-row total">
+        <span class="summary-label">Total</span>
+        <span class="summary-value" id="total-val">Rp 0.00</span>
+      </div>
+      <button class="checkout-btn" id="checkout-btn">CHECKOUT</button>
+    </div>
+  </div>
+
+  <!-- Reservation Overlay / Modal -->
+  <div class="modal-overlay" id="reservation-modal">
+    <div class="modal-content glass-modal animate-slide-up">
+      <button class="modal-close" id="reservation-close">&times;</button>
+      <h3 class="modal-title">Book a Harvesting Session</h3>
+      <p class="modal-subtitle">Join us at the apiary and harvest raw honey straight from the hive.</p>
+      
+      <form class="modal-form" id="reservation-form">
+        <div class="form-group">
+          <label for="res-name">Full Name</label>
+          <input type="text" id="res-name" required placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+          <label for="res-email">Email Address</label>
+          <input type="email" id="res-email" required placeholder="Enter your email">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="res-date">Select Date</label>
+            <input type="date" id="res-date" required>
+          </div>
+          <div class="form-group">
+            <label for="res-guests">Number of Guests</label>
+            <input type="number" id="res-guests" min="1" max="10" value="1" required>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn">Confirm Reservation</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contact Us Modal -->
+  <div class="modal-overlay" id="contact-modal">
+    <div class="modal-content glass-modal animate-slide-up">
+      <button class="modal-close" id="contact-close">&times;</button>
+      <h3 class="modal-title">Contact UBA's Honey</h3>
+      <p class="modal-subtitle">Have questions or want to wholesale? Send us a message.</p>
+      
+      <form class="modal-form" id="contact-form">
+        <div class="form-group">
+          <label for="contact-name">Name</label>
+          <input type="text" id="contact-name" required placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="contact-email">Email</label>
+          <input type="email" id="contact-email" required placeholder="Your email">
+        </div>
+        <div class="form-group">
+          <label for="contact-msg">Message</label>
+          <textarea id="contact-msg" rows="4" required placeholder="Write your message here..."></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Send Message</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Promo Modal -->
+  <div class="modal-overlay" id="promo-modal">
+    <div class="modal-content glass-modal text-center animate-slide-up">
+      <button class="modal-close" id="promo-close">&times;</button>
+      <div class="promo-badge">30% OFF</div>
+      <h3 class="modal-title">First Buy Discount!</h3>
+      <p class="modal-subtitle">Use the discount code below at checkout to receive 30% off your first premium honey jar.</p>
+      <div class="coupon-code-container">
+        <span class="coupon-code" id="coupon-code">FIRSTHONEY30</span>
+        <button class="copy-coupon-btn" id="copy-coupon-btn">Copy Code</button>
+      </div>
+      <p class="promo-expiry">Valid for the next 48 hours only.</p>
+    </div>
+  </div>
+
+  <!-- Checkout Success Modal -->
+  <div class="modal-overlay" id="checkout-overlay">
+    <div class="modal-content glass-modal receipt-modal animate-slide-up">
+      <div class="receipt-header">
+        <div class="receipt-logo">UBA'S HONEY</div>
+        <div class="receipt-title">ORDER COMPLETED</div>
+      </div>
+      
+      <div class="receipt-body">
+        <div id="receipt-items"></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-line total-line">
+          <span>Total Paid</span>
+          <span id="receipt-total">Rp 0.00</span>
+        </div>
+      </div>
+
+      <div class="receipt-footer">
+        <p class="receipt-msg">Thank you for supporting organic honey harvesting!</p>
+        <button class="submit-btn" id="receipt-close-btn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand-col">
+        <a href="#" class="logo">
+          <span class="logo-circle">
+            <svg viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="4"/>
+              <path d="M35,50 C35,42 42,35 50,35 C58,35 65,42 65,50 C65,58 58,65 50,65 C42,65 35,58 35,50 Z" fill="currentColor"/>
+              <path d="M42,50 L58,50 M50,42 L50,58" stroke="#fff" stroke-width="3"/>
+            </svg>
+          </span>
+          <span class="logo-text">UBA's Honey</span>
+        </a>
+        <p class="footer-about">Bringing nature's finest nectar directly from organic hives to your table. EST. 1997.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="#product-gallery">Products</a></li>
+          <li><a href="#harvest-experience">Harvest Activities</a></li>
+          <li><a href="#services">Our Hives</a></li>
+          <li><a href="#faqs">Testimonials</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h4>Contact & Legal</h4>
+        <ul>
+          <li><a href="#contact">Support</a></li>
+          <li><a href="#contact">Wholesale Partnerships</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 UBA'S HONEY. ALL RIGHTS RESERVED.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

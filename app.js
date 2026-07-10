@@ -1,567 +1,290 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UBA's Honey | Pure Natural Honey</title>
-  <meta name="description" content="Pure premium natural honey by UBA's Honey. Sourced from the finest wilderness and packaged hygienically to maintain raw nutritional purity.">
+/* =========================================================================
+   UBA's Honey - Interactive Web Logic
+   Features: Header scroll styling, Product Filtering, Shopping Cart, Modals.
+   ========================================================================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  // =========================================================================
+  // 1. Header Scroll Effect
+  // =========================================================================
+  const header = document.querySelector('header');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+  });
+
+
+  // =========================================================================
+  // 2. Product Category Filtering
+  // =========================================================================
+  const filterTabs = document.querySelectorAll('.filter-tab');
+  const productCards = document.querySelectorAll('.product-card');
+
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active class from all tabs
+      filterTabs.forEach(t => t.classList.remove('active'));
+      // Add active class to current tab
+      tab.classList.add('active');
+
+      const category = tab.getAttribute('data-category').toLowerCase();
+
+      productCards.forEach(card => {
+        const cardCategories = card.getAttribute('data-category').toLowerCase().split(' ');
+
+        if (category === 'all' || cardCategories.includes(category)) {
+          card.classList.remove('hidden');
+          // Simple entry fade animation
+          card.style.opacity = '0';
+          setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transition = 'opacity 0.4s ease';
+          }, 50);
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    });
+  });
+
+
+  // =========================================================================
+  // 3. Shopping Cart Drawer System
+  // =========================================================================
+  let cart = [];
+  const cartDrawer = document.getElementById('cart-drawer');
+  const cartToggleBtn = document.getElementById('cart-toggle-btn');
+  const cartCloseBtn = document.getElementById('cart-close-btn');
+  const cartItemsContainer = document.getElementById('cart-items-container');
+  const cartCountBadge = document.getElementById('cart-count');
+  const subtotalVal = document.getElementById('subtotal-val');
+  const totalVal = document.getElementById('total-val');
+  const checkoutBtn = document.getElementById('checkout-btn');
+
+  // Toggle Cart Open/Close
+  cartToggleBtn.addEventListener('click', () => cartDrawer.classList.toggle('open'));
+  cartCloseBtn.addEventListener('click', () => cartDrawer.classList.remove('open'));
+
+  // Add to Cart Click Handlers
+  const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+  addToCartButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      const id = button.getAttribute('data-id');
+      const name = button.getAttribute('data-name');
+      const price = parseFloat(button.getAttribute('data-price'));
+      const img = button.getAttribute('data-img');
+
+      addToCart(id, name, price, img);
+      
+      // Auto-open cart drawer when adding item
+      cartDrawer.classList.add('open');
+    });
+  });
+
+  // Cart Functions
+  function addToCart(id, name, price, img) {
+    const existingItem = cart.find(item => item.id === id);
+
+    if (existingItem) {
+      existingItem.qty += 1;
+    } else {
+      cart.push({ id, name, price, img, qty: 1 });
+    }
+
+    updateCartUI();
+  }
+
+  function removeFromCart(id) {
+    cart = cart.filter(item => item.id !== id);
+    updateCartUI();
+  }
+
+  function updateCartUI() {
+    // Empty message
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = `<p class="cart-empty-message">Your shopping cart is empty.<br>Select a jar to get started!</p>`;
+      cartCountBadge.textContent = '0';
+      cartCountBadge.style.display = 'none';
+      subtotalVal.textContent = 'Rp 0.00';
+      totalVal.textContent = 'Rp 0.00';
+      return;
+    }
+
+    // Render items
+    cartItemsContainer.innerHTML = '';
+    let subtotal = 0;
+    let totalItems = 0;
+
+    cart.forEach(item => {
+      subtotal += item.price * item.qty;
+      totalItems += item.qty;
+
+      const itemEl = document.createElement('div');
+      itemEl.classList.add('cart-item');
+      itemEl.innerHTML = `
+        <div class="cart-item-img-box">
+          <img src="${item.img}" alt="${item.name}" class="cart-item-img">
+        </div>
+        <div class="cart-item-details">
+          <h4 class="cart-item-name">${item.name}</h4>
+          <span class="cart-item-price">Rp ${item.price.toFixed(2)}</span>
+          <div class="cart-item-qty">Qty: ${item.qty}</div>
+        </div>
+        <button class="remove-cart-item" data-id="${item.id}">&times;</button>
+      `;
+
+      // Remove item event
+      itemEl.querySelector('.remove-cart-item').addEventListener('click', () => {
+        removeFromCart(item.id);
+      });
+
+      cartItemsContainer.appendChild(itemEl);
+    });
+
+    // Update Totals
+    cartCountBadge.textContent = totalItems;
+    cartCountBadge.style.display = 'flex';
+    subtotalVal.textContent = `Rp ${subtotal.toFixed(2)}`;
+    totalVal.textContent = `Rp ${subtotal.toFixed(2)}`;
+  }
+
+
+  // =========================================================================
+  // 4. Modals & Overlays
+  // =========================================================================
+  const reservationModal = document.getElementById('reservation-modal');
+  const reservationBtn = document.getElementById('reservation-btn');
+  const reservationClose = document.getElementById('reservation-close');
+  const reservationForm = document.getElementById('reservation-form');
+
+  const contactModal = document.getElementById('contact-modal');
+  const contactBtn = document.getElementById('contact-btn');
+  const contactClose = document.getElementById('contact-close');
+  const contactForm = document.getElementById('contact-form');
+
+  const promoModal = document.getElementById('promo-modal');
+  const heroPromoBtn = document.getElementById('hero-promo-btn');
+  const promoClose = document.getElementById('promo-close');
+  const copyCouponBtn = document.getElementById('copy-coupon-btn');
+  const couponCodeText = document.getElementById('coupon-code');
+
+  const checkoutOverlay = document.getElementById('checkout-overlay');
+  const checkoutItemsContainer = document.getElementById('receipt-items');
+  const checkoutTotalText = document.getElementById('receipt-total');
+  const receiptCloseBtn = document.getElementById('receipt-close-btn');
+
+  // Generic modal control
+  function openModal(modal) {
+    modal.classList.add('open');
+  }
+
+  function closeModal(modal) {
+    modal.classList.remove('open');
+  }
+
+  // Reservation Modal Events
+  if (reservationBtn) reservationBtn.addEventListener('click', () => openModal(reservationModal));
+  if (reservationClose) reservationClose.addEventListener('click', () => closeModal(reservationModal));
   
-  <!-- Google Fonts for Premium Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600;1,700&display=swap" rel="stylesheet">
-  
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+  // Contact Modal Events
+  if (contactBtn) contactBtn.addEventListener('click', () => openModal(contactModal));
+  if (contactClose) contactClose.addEventListener('click', () => closeModal(contactModal));
 
-  <!-- Header Navigation -->
-  <header>
-    <a href="#" class="logo" id="header-logo">
-      <span class="logo-circle">
-        <svg viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="4"/>
-          <!-- Simplified Bee Icon -->
-          <path d="M35,50 C35,42 42,35 50,35 C58,35 65,42 65,50 C65,58 58,65 50,65 C42,65 35,58 35,50 Z" fill="currentColor"/>
-          <path d="M42,50 L58,50 M50,42 L50,58" stroke="#fff" stroke-width="3"/>
-          <ellipse cx="44" cy="33" rx="6" ry="12" fill="currentColor" transform="rotate(-30 44 33)"/>
-          <ellipse cx="56" cy="33" rx="6" ry="12" fill="currentColor" transform="rotate(30 56 33)"/>
-        </svg>
-      </span>
-      <span class="logo-text">UBA's Honey</span>
-    </a>
-    
-    <nav class="nav-container">
-      <ul class="nav-links">
-        <li><a href="#product-gallery">Product</a></li>
-        <li><a href="#faqs">FAQs</a></li>
-        <li><a href="#services">Services</a></li>
-        <li><a href="#harvest-experience">Activities</a></li>
-        <li><a href="#news">News</a></li>
-      </ul>
-    </nav>
+  // Promo Modal Events
+  if (heroPromoBtn) heroPromoBtn.addEventListener('click', () => openModal(promoModal));
+  if (promoClose) promoClose.addEventListener('click', () => closeModal(promoModal));
 
-    <div class="header-actions">
-      <!-- Shopping Cart Button -->
-      <button class="cart-icon-btn" id="cart-toggle-btn" aria-label="Open Shopping Cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="9" cy="21" r="1"/>
-          <circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
-        <span class="cart-count" id="cart-count">0</span>
-      </button>
-      <button class="contact-btn" id="contact-btn">Contact us</button>
-    </div>
-  </header>
+  // Copy Promo Coupon Code
+  if (copyCouponBtn) {
+    copyCouponBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(couponCodeText.textContent).then(() => {
+        copyCouponBtn.textContent = 'Copied!';
+        copyCouponBtn.style.backgroundColor = '#6A9C78';
+        setTimeout(() => {
+          copyCouponBtn.textContent = 'Copy Code';
+          copyCouponBtn.style.backgroundColor = '#1E150B';
+        }, 2000);
+      });
+    });
+  }
 
-  <!-- Hero Section -->
-  <section class="hero-section" id="hero">
-    <div class="hero-backdrop-text">
-      <div class="since-text">SINCE <span class="since-year">[1997]</span></div>
-      <div class="large-word natural">NAT</div>
-      <div class="large-word honey">HONEY</div>
-      <div class="large-word natural-end">AL</div>
-    </div>
+  // Form Submissions
+  if (reservationForm) {
+    reservationForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert(`Thank you, ${document.getElementById('res-name').value}! Your harvesting reservation has been confirmed. We've sent a details email to ${document.getElementById('res-email').value}.`);
+      reservationForm.reset();
+      closeModal(reservationModal);
+    });
+  }
 
-    <!-- Center Interactive Image Card (Glassmorphic Frame) -->
-    <div class="hero-center-card-wrapper">
-      <div class="hero-glass-card">
-        <img class="hero-card-img" src="assets/hero_hand_honey.png" alt="Pure raw honey dripping from a dipper">
-      </div>
-    </div>
+  if (contactForm) {
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert(`Message sent! Thank you for contacting us, we'll respond to your query shortly.`);
+      contactForm.reset();
+      closeModal(contactModal);
+    });
+  }
 
-    <!-- Right Overflowing Honey Jar -->
-    <div class="hero-right-jar-wrapper">
-      <img class="hero-jar-img" src="assets/hero_honey_jar.png" alt="UBA's Premium Honey Jar">
-    </div>
+  // Close modals on clicking overlay background
+  const modals = [reservationModal, contactModal, promoModal, checkoutOverlay];
+  modals.forEach(modal => {
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal(modal);
+        }
+      });
+    }
+  });
 
-    <!-- Hero Content Footer Bar -->
-    <div class="hero-footer-content">
-      <div class="hero-desc-box">
-        <p class="hero-desc-text">Made from high quality pure honey, bringing purity and the best natural benefits for your health.</p>
-        <button class="hero-promo-btn" id="hero-promo-btn">
-          <span>GET 30% OFF YOUR FIRST BUY!</span>
-          <span class="arrow-circle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="7" y1="17" x2="17" y2="7"/>
-              <polyline points="7,7 17,7 17,17"/>
-            </svg>
-          </span>
-        </button>
-      </div>
 
-      <div class="hero-rating-box">
-        <div class="rating-avatars">
-          <img src="assets/reviewer.png" alt="Happy Honey customer">
-        </div>
-        <div class="rating-info">
-          <div class="stars">
-            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-          </div>
-          <div class="rating-label">4.9/5 (Review)</div>
-        </div>
-      </div>
-    </div>
-  </section>
+  // =========================================================================
+  // 5. Checkout System
+  // =========================================================================
+  checkoutBtn.addEventListener('click', () => {
+    if (cart.length === 0) {
+      alert('Your cart is empty! Add products first.');
+      return;
+    }
 
-  <!-- Section 2: Features, Variety & Beehive Illustration -->
-  <section class="features-section" id="services">
-    <div class="features-intro">
-      <p class="features-intro-text">
-        We provide a variety of quality genuine honey 🍯 guaranteed authenticity, without mixtures, and packaged 📦 hygienically to maintain its purity and natural benefits.
-      </p>
-    </div>
+    // Build Receipt HTML
+    checkoutItemsContainer.innerHTML = '';
+    let total = 0;
 
-    <div class="features-grid">
-      <!-- Left Column: Honey Jar & Box Packaging -->
-      <div class="features-visual">
-        <img src="assets/honey_packaging.png" alt="UBA's Honey minimalist packaging box and jar" class="packaging-img">
-      </div>
+    cart.forEach(item => {
+      const lineTotal = item.price * item.qty;
+      total += lineTotal;
 
-      <!-- Center Column: Script Hand-written Honey Varieties -->
-      <div class="features-list-wrapper">
-        <ul class="variety-list">
-          <li class="variety-item" data-desc="Extracted from wild medicinal mountain herbs. Rich in antioxidants.">Herbal</li>
-          <li class="variety-item" data-desc="Crafted by bees from multiple floral blossoms. Balanced sweet taste.">Multifloral</li>
-          <li class="variety-item" data-desc="Resinous mixture gathered from tree buds. Strong immune-booster.">Propolis</li>
-          <li class="variety-item" data-desc="Rare dark honey from deep forest oak trees. Strong mineral profile.">Black</li>
-          <li class="variety-item" data-desc="Infused with premium garlic extracts. Ultimate natural antibiotic.">Garlic</li>
-          <li class="variety-item" data-desc="Secret food of the queen bee. Highly nourishing organic elixir.">Royal Jelly</li>
-        </ul>
-      </div>
+      const receiptItemRow = document.createElement('div');
+      receiptItemRow.classList.add('receipt-line', 'receipt-item-line');
+      receiptItemRow.innerHTML = `
+        <span><span class="receipt-item-name">${item.name}</span> x${item.qty}</span>
+        <span>Rp ${lineTotal.toFixed(2)}</span>
+      `;
+      checkoutItemsContainer.appendChild(receiptItemRow);
+    });
 
-      <!-- Right Column: Artistic SVG Beehive & Bees Illustration -->
-      <div class="features-illustration">
-        <div class="illustration-container">
-          <svg viewBox="0 0 300 400" class="artistic-svg" fill="none">
-            <!-- Tree Branch -->
-            <path d="M300,50 Q200,60 140,80 T40,110" stroke="#8D5B1B" stroke-width="6" stroke-linecap="round"/>
-            <path d="M180,68 Q140,90 130,120" stroke="#8D5B1B" stroke-width="4" stroke-linecap="round"/>
-            <path d="M100,95 Q80,120 50,130" stroke="#8D5B1B" stroke-width="3" stroke-linecap="round"/>
-            
-            <!-- Leaves on Branch -->
-            <path d="M220,53 C220,40 240,45 230,55 C220,65 210,60 220,53 Z" fill="#6A9C78"/>
-            <path d="M160,70 C150,55 170,60 165,75 C160,85 155,80 160,70 Z" fill="#6A9C78"/>
-            <path d="M120,105 C110,95 125,95 125,110 C120,120 115,115 120,105 Z" fill="#6A9C78"/>
-            <path d="M70,105 C60,95 80,95 75,110 C70,120 65,115 70,105 Z" fill="#6A9C78"/>
-            
-            <!-- Hanging Rope for Beehive -->
-            <line x1="130" y1="120" x2="130" y2="170" stroke="#A77B4C" stroke-width="2.5" stroke-dasharray="3 3"/>
-            
-            <!-- Beehive -->
-            <g class="hover-shake">
-              <!-- Hive Shape -->
-              <path d="M100,200 C100,165 160,165 160,200 C160,200 175,225 170,250 C165,275 145,290 130,290 C115,290 95,275 90,250 C85,225 100,200 100,200 Z" fill="#ECAE4E"/>
-              <!-- Horizontal Ridges -->
-              <path d="M96,215 C110,225 150,225 164,215" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
-              <path d="M92,235 C110,245 150,245 168,235" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
-              <path d="M92,255 C110,265 150,265 168,255" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
-              <path d="M100,272 C112,280 148,280 160,272" stroke="#D18C28" stroke-width="4" stroke-linecap="round"/>
-              <!-- Hive Entrance Hole -->
-              <circle cx="130" cy="245" r="10" fill="#4E3610"/>
-              <ellipse cx="130" cy="247" rx="7" ry="3" fill="#291C08"/>
-            </g>
+    checkoutTotalText.textContent = `Rp ${total.toFixed(2)}`;
 
-            <!-- Flying Bees around Hive -->
-            <g class="bee-flight-1">
-              <ellipse cx="70" cy="220" rx="6" ry="8" fill="#F4C430" transform="rotate(45 70 220)"/>
-              <path d="M70,214 C73,205 65,205 67,214" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
-              <path d="M70,226 C73,235 65,235 67,226" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
-              <line x1="66" y1="216" x2="74" y2="224" stroke="#4E3610" stroke-width="1.5"/>
-              <line x1="64" y1="220" x2="72" y2="228" stroke="#4E3610" stroke-width="1.5"/>
-            </g>
-            <g class="bee-flight-2">
-              <ellipse cx="200" cy="240" rx="8" ry="6" fill="#F4C430"/>
-              <path d="M196,234 C190,230 190,240 196,236" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
-              <path d="M204,234 C210,230 210,240 204,236" fill="#BCE0FD" stroke="#90CAF9" stroke-width="0.5"/>
-              <line x1="196" y1="234" x2="196" y2="246" stroke="#4E3610" stroke-width="1.5"/>
-              <line x1="200" y1="234" x2="200" y2="246" stroke="#4E3610" stroke-width="1.5"/>
-              <line x1="204" y1="234" x2="204" y2="246" stroke="#4E3610" stroke-width="1.5"/>
-            </g>
-          </svg>
-        </div>
-      </div>
-    </div>
-  </section>
+    // Close Cart Drawer and Open Receipt Overlay
+    cartDrawer.classList.remove('open');
+    openModal(checkoutOverlay);
 
-  <!-- Section 3: The Best Type of Honey (Gallery) -->
-  <section class="gallery-section" id="product-gallery">
-    <div class="gallery-header">
-      <div class="gallery-title-wrapper">
-        <span class="gallery-tag">Type of Honey</span>
-        <h2 class="gallery-title">The Best Type of Honey</h2>
-        <p class="gallery-desc">
-          Learn more about some of the products we take special pride in. Each of these items reflects our commitment to quality, innovation, and customer satisfaction. From carefully crafted designs to durable materials, we ensure every product stands out. We believe in delivering excellence, and that's why our customers trust us time and again. Discover how our unique products can make a difference in your life.
-        </p>
-      </div>
-      <div class="gallery-header-image">
-        <img src="assets/honey_collection.png" alt="A collection of premium organic honeys" class="collection-img">
-      </div>
-    </div>
+    // Empty Cart
+    cart = [];
+    updateCartUI();
+  });
 
-    <!-- Discover Your Honey Filter Block -->
-    <div class="filter-container">
-      <h3 class="filter-title">
-        <span class="bee-icon">🐝</span> Discover Your Honey <span class="bee-icon">🐝</span>
-      </h3>
-      
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-category="all">All</button>
-        <button class="filter-tab" data-category="liquid">Liquid</button>
-        <button class="filter-tab" data-category="creamed">Creamed</button>
-        <button class="filter-tab" data-category="forest">Forest</button>
-        <button class="filter-tab" data-category="meadow">Meadow</button>
-      </div>
-    </div>
+  if (receiptCloseBtn) {
+    receiptCloseBtn.addEventListener('click', () => {
+      closeModal(checkoutOverlay);
+    });
+  }
 
-    <!-- Product Grid -->
-    <div class="product-grid" id="product-grid">
-      <!-- Wildflower Honey -->
-      <div class="product-card" data-category="liquid forest">
-        <div class="product-img-box">
-          <img src="assets/wildflower_honey.png" alt="Wildflower Honey" class="prod-img">
-        </div>
-        <div class="product-details">
-          <div class="product-main-info">
-            <h4 class="product-name">Wildflower Honey</h4>
-            <span class="product-rating">★ 4.8</span>
-          </div>
-          <div class="product-footer-info">
-            <span class="product-price">Rp 250.00</span>
-            <button class="add-to-cart-btn" data-id="wildflower" data-name="Wildflower Honey" data-price="250" data-img="assets/wildflower_honey.png" aria-label="Add to cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Acacia Honey -->
-      <div class="product-card" data-category="liquid meadow">
-        <div class="product-img-box">
-          <img src="assets/acacia_honey.png" alt="Acacia Honey" class="prod-img">
-        </div>
-        <div class="product-details">
-          <div class="product-main-info">
-            <h4 class="product-name">Acacia Honey</h4>
-            <span class="product-rating">★ 4.9</span>
-          </div>
-          <div class="product-footer-info">
-            <span class="product-price">Rp 150.00</span>
-            <button class="add-to-cart-btn" data-id="acacia" data-name="Acacia Honey" data-price="150" data-img="assets/acacia_honey.png" aria-label="Add to cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Berry Honey -->
-      <div class="product-card" data-category="creamed forest">
-        <div class="product-img-box">
-          <img src="assets/berry_honey.png" alt="Berry Honey" class="prod-img">
-        </div>
-        <div class="product-details">
-          <div class="product-main-info">
-            <h4 class="product-name">Berry Honey</h4>
-            <span class="product-rating">★ 4.8</span>
-          </div>
-          <div class="product-footer-info">
-            <span class="product-price">Rp 210.00</span>
-            <button class="add-to-cart-btn" data-id="berry" data-name="Berry Honey" data-price="210" data-img="assets/berry_honey.png" aria-label="Add to cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 0 1-8 0"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section 4: Harvest Honey With Us -->
-  <section class="harvest-section" id="harvest-experience">
-    <!-- Overlay dripping SVG styling on top -->
-    <div class="honey-drips-bg">
-      <svg viewBox="0 0 1440 320" fill="none" preserveAspectRatio="none">
-        <path d="M0,0 L1440,0 L1440,160 C1380,180 1320,120 1260,130 C1200,140 1140,220 1080,240 C1020,260 960,220 900,200 C840,180 780,180 720,210 C660,240 600,300 540,290 C480,280 420,200 360,210 C300,220 240,320 180,300 C120,280 60,140 0,160 Z" fill="#ECAE4E" opacity="0.12"/>
-        <path d="M0,0 L1440,0 L1440,100 C1350,110 1260,80 1170,90 C1080,100 990,150 900,140 C810,130 720,60 630,70 C540,80 450,170 360,160 C270,150 180,40 90,60 C45,70 0,30 0,40 Z" fill="#ECAE4E" opacity="0.06"/>
-      </svg>
-    </div>
-
-    <div class="harvest-header">
-      <div class="harvest-left">
-        <span class="harvest-tag">New Experience</span>
-        <h2 class="harvest-title">You Can Come Harvest Honey With Us</h2>
-      </div>
-      <div class="harvest-right">
-        <p class="harvest-desc-text">
-          Our harvest honey is pure, golden, and rich with natural goodness. Savor the taste of nature's sweetness, straight from the hive to your table.
-        </p>
-        <a href="#harvest-experience" class="learn-more-btn" id="learn-more-btn">
-          <span>LEARN MORE</span>
-          <span class="arrow-circle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="7" y1="17" x2="17" y2="7"/>
-              <polyline points="7,7 17,7 17,17"/>
-            </svg>
-          </span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Side-by-Side Photo Cards -->
-    <div class="harvest-grid">
-      <!-- Card 1: Beekeeper Harvesting -->
-      <div class="harvest-card scale-hover">
-        <div class="harvest-card-img-box">
-          <img src="assets/beekeeper.png" alt="Beekeeper in white suit harvesting honeycomb frame">
-        </div>
-      </div>
-
-      <!-- Card 2: Interactive Closeup with button -->
-      <div class="harvest-card Reservation-card scale-hover">
-        <div class="harvest-card-img-box">
-          <img src="assets/honeycomb_closeup.png" alt="Close up honey dripping from honeycomb frame">
-          <div class="harvest-card-overlay">
-            <h4 class="overlay-title">You Will Be Able To Taste Pure Honey From Nature</h4>
-            <button class="reservation-btn" id="reservation-btn">Reservation</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quality presentation statement -->
-    <div class="harvest-footer-statement">
-      <p class="statement-text">
-        Since 1999, we have presented thousands of bottles of pure honey to meet customer needs for natural taste and the best quality.
-      </p>
-    </div>
-  </section>
-
-  <!-- Section 5: Testimonials -->
-  <section class="testimonials-section" id="faqs">
-    <div class="testimonial-header">
-      <span class="testimonial-tag">Our Testimonials</span>
-      <h2 class="testimonial-title">What Our Customers are Saying About Honey</h2>
-    </div>
-
-    <div class="testimonials-grid">
-      <div class="testimonial-card">
-        <div class="testimonial-rating">★★★★★</div>
-        <p class="testimonial-quote">"This honey is pure magic. The Wildflower Honey is rich, flavorful, and you can truly taste the quality. The packaging is absolutely beautiful as well!"</p>
-        <div class="testimonial-user">
-          <div class="user-info">
-            <h5 class="user-name">Sarah Jenkins</h5>
-            <span class="user-role">Verified Buyer</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="testimonial-card">
-        <div class="testimonial-rating">★★★★★</div>
-        <p class="testimonial-quote">"I tried the Acacia Honey with oranges and it has changed my morning tea routine forever. It has a delicate sweetness that is unmatched by store bought honeys."</p>
-        <div class="testimonial-user">
-          <div class="user-info">
-            <h5 class="user-name">Liam Martinez</h5>
-            <span class="user-role">Chef</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="testimonial-card">
-        <div class="testimonial-rating">★★★★★</div>
-        <p class="testimonial-quote">"Excellent service and phenomenal honey. The reservation activity was a wonderful weekend experience for my family—highly recommend harvesting with them!"</p>
-        <div class="testimonial-user">
-          <div class="user-info">
-            <h5 class="user-name">Elena Rostova</h5>
-            <span class="user-role">Nature Enthusiast</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sliding Shopping Cart Drawer -->
-  <div class="cart-drawer" id="cart-drawer">
-    <div class="cart-drawer-header">
-      <h3>SHOPPING CART</h3>
-      <button class="cart-close-btn" id="cart-close-btn" aria-label="Close Cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="cart-items-container" id="cart-items-container">
-      <p class="cart-empty-message">Your shopping cart is empty.<br>Select a jar to get started!</p>
-    </div>
-
-    <div class="cart-drawer-footer">
-      <div class="cart-summary-row">
-        <span class="summary-label">Subtotal</span>
-        <span class="summary-value" id="subtotal-val">Rp 0.00</span>
-      </div>
-      <div class="cart-summary-row">
-        <span class="summary-label">Shipping</span>
-        <span class="summary-value" id="shipping-val">Free</span>
-      </div>
-      <div class="cart-summary-row total">
-        <span class="summary-label">Total</span>
-        <span class="summary-value" id="total-val">Rp 0.00</span>
-      </div>
-      <button class="checkout-btn" id="checkout-btn">CHECKOUT</button>
-    </div>
-  </div>
-
-  <!-- Reservation Overlay / Modal -->
-  <div class="modal-overlay" id="reservation-modal">
-    <div class="modal-content glass-modal animate-slide-up">
-      <button class="modal-close" id="reservation-close">&times;</button>
-      <h3 class="modal-title">Book a Harvesting Session</h3>
-      <p class="modal-subtitle">Join us at the apiary and harvest raw honey straight from the hive.</p>
-      
-      <form class="modal-form" id="reservation-form">
-        <div class="form-group">
-          <label for="res-name">Full Name</label>
-          <input type="text" id="res-name" required placeholder="Enter your name">
-        </div>
-        <div class="form-group">
-          <label for="res-email">Email Address</label>
-          <input type="email" id="res-email" required placeholder="Enter your email">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="res-date">Select Date</label>
-            <input type="date" id="res-date" required>
-          </div>
-          <div class="form-group">
-            <label for="res-guests">Number of Guests</label>
-            <input type="number" id="res-guests" min="1" max="10" value="1" required>
-          </div>
-        </div>
-        <button type="submit" class="submit-btn">Confirm Reservation</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Contact Us Modal -->
-  <div class="modal-overlay" id="contact-modal">
-    <div class="modal-content glass-modal animate-slide-up">
-      <button class="modal-close" id="contact-close">&times;</button>
-      <h3 class="modal-title">Contact UBA's Honey</h3>
-      <p class="modal-subtitle">Have questions or want to wholesale? Send us a message.</p>
-      
-      <form class="modal-form" id="contact-form">
-        <div class="form-group">
-          <label for="contact-name">Name</label>
-          <input type="text" id="contact-name" required placeholder="Your name">
-        </div>
-        <div class="form-group">
-          <label for="contact-email">Email</label>
-          <input type="email" id="contact-email" required placeholder="Your email">
-        </div>
-        <div class="form-group">
-          <label for="contact-msg">Message</label>
-          <textarea id="contact-msg" rows="4" required placeholder="Write your message here..."></textarea>
-        </div>
-        <button type="submit" class="submit-btn">Send Message</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Promo Modal -->
-  <div class="modal-overlay" id="promo-modal">
-    <div class="modal-content glass-modal text-center animate-slide-up">
-      <button class="modal-close" id="promo-close">&times;</button>
-      <div class="promo-badge">30% OFF</div>
-      <h3 class="modal-title">First Buy Discount!</h3>
-      <p class="modal-subtitle">Use the discount code below at checkout to receive 30% off your first premium honey jar.</p>
-      <div class="coupon-code-container">
-        <span class="coupon-code" id="coupon-code">FIRSTHONEY30</span>
-        <button class="copy-coupon-btn" id="copy-coupon-btn">Copy Code</button>
-      </div>
-      <p class="promo-expiry">Valid for the next 48 hours only.</p>
-    </div>
-  </div>
-
-  <!-- Checkout Success Modal -->
-  <div class="modal-overlay" id="checkout-overlay">
-    <div class="modal-content glass-modal receipt-modal animate-slide-up">
-      <div class="receipt-header">
-        <div class="receipt-logo">UBA'S HONEY</div>
-        <div class="receipt-title">ORDER COMPLETED</div>
-      </div>
-      
-      <div class="receipt-body">
-        <div id="receipt-items"></div>
-        <div class="receipt-divider"></div>
-        <div class="receipt-line total-line">
-          <span>Total Paid</span>
-          <span id="receipt-total">Rp 0.00</span>
-        </div>
-      </div>
-
-      <div class="receipt-footer">
-        <p class="receipt-msg">Thank you for supporting organic honey harvesting!</p>
-        <button class="submit-btn" id="receipt-close-btn">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer Section -->
-  <footer>
-    <div class="footer-grid">
-      <div class="footer-brand-col">
-        <a href="#" class="logo">
-          <span class="logo-circle">
-            <svg viewBox="0 0 100 100" fill="none">
-              <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="4"/>
-              <path d="M35,50 C35,42 42,35 50,35 C58,35 65,42 65,50 C65,58 58,65 50,65 C42,65 35,58 35,50 Z" fill="currentColor"/>
-              <path d="M42,50 L58,50 M50,42 L50,58" stroke="#fff" stroke-width="3"/>
-            </svg>
-          </span>
-          <span class="logo-text">UBA's Honey</span>
-        </a>
-        <p class="footer-about">Bringing nature's finest nectar directly from organic hives to your table. EST. 1997.</p>
-      </div>
-
-      <div class="footer-links-col">
-        <h4>Explore</h4>
-        <ul>
-          <li><a href="#product-gallery">Products</a></li>
-          <li><a href="#harvest-experience">Harvest Activities</a></li>
-          <li><a href="#services">Our Hives</a></li>
-          <li><a href="#faqs">Testimonials</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-links-col">
-        <h4>Contact & Legal</h4>
-        <ul>
-          <li><a href="#contact">Support</a></li>
-          <li><a href="#contact">Wholesale Partnerships</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms & Conditions</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>&copy; 2026 UBA'S HONEY. ALL RIGHTS RESERVED.</p>
-    </div>
-  </footer>
-
-  <script src="app.js"></script>
-</body>
-</html>
+});
